@@ -1,0 +1,640 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오산점 스마트 근무관리</title><style>
+:root{font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;color:#202938;background:#f5f6f9}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1400px;margin:auto;padding:20px}header,.toolbar,.panel{background:white;border:1px solid #e1e5ed;border-radius:14px;padding:16px;margin-bottom:14px}header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}h1{font-size:22px;margin:0 0 5px}h2{font-size:17px;margin:0 0 12px}small,.muted{color:#667085}button,select,input,textarea{font:inherit;border:1px solid #cbd2df;border-radius:8px;padding:9px;background:white}button{cursor:pointer}button.primary{background:#142e5b;color:white;border-color:#142e5b}button:disabled{opacity:.45;cursor:not-allowed}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.tabs button.active{background:#142e5b;color:white}.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.month{font-weight:700;font-size:20px}.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.weekday{text-align:center;padding:8px;font-weight:700;color:#4b5563}.day{background:#fff;border:1px solid #d9dfeb;border-radius:9px;min-height:188px;padding:8px;cursor:pointer;overflow-wrap:anywhere}.day.other{background:#f1f3f6;color:#87909e}.day.selected{outline:2px solid #142e5b}.date{font-weight:700;margin-bottom:6px}.section{border-top:1px solid #edf0f5;padding-top:5px;margin-top:5px;font-size:12px;line-height:1.45}.section b{display:block;color:#566070;margin-bottom:2px}.names{white-space:pre-wrap}.note{font-size:11px;margin-top:5px;color:#555}.warning{font-size:11px;font-weight:700;color:#a33224}.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px}.panel{margin-bottom:0}.stack{display:grid;gap:9px}label{display:grid;gap:4px;font-size:13px}textarea{min-height:66px;resize:vertical}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid #e5e9ef;padding:9px;text-align:left}th{background:#f7f8fa}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:12px;border-radius:20px;background:#edf1f7;padding:3px 9px}.good{color:#17764c}.bad{color:#a33224}.hidden{display:none!important}.request{padding:11px;border:1px solid #e5e9ef;border-radius:10px;margin:8px 0}.footer{font-size:12px;color:#6b7280;margin:16px 0}#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#202938;color:#fff;border-radius:9px;padding:12px;display:none;z-index:10}@media(max-width:1000px){.layout{grid-template-columns:1fr}.calendar{overflow-x:auto;grid-template-columns:repeat(7,minmax(125px,1fr))}.day{min-height:160px}}@media(max-width:600px){.wrap{padding:9px}h1{font-size:18px}.day{padding:5px}.section{font-size:11px}}
+.pickcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;max-width:650px}.pickday{min-height:57px;padding:8px 3px;text-align:center;border:1px solid #d8dfeb;border-radius:9px;position:relative}.pickday.chosen{background:#142e5b;color:white;border-color:#142e5b}.pickday.outside{visibility:hidden}.pickday .dot{display:block;font-size:10px;margin-top:3px}.pickhead{text-align:center;font-size:12px;font-weight:700;padding:5px}.redflag{color:#ba2525;font-weight:800}.day.risk{border:2px solid #cf3434}.risknote{background:#fff0f0;border:1px solid #f2b0b0;border-radius:9px;padding:10px;margin:8px 0;color:#a22222}.pickbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.summary{font-weight:700;color:#142e5b}@media(max-width:600px){.pickday{min-height:52px;padding:5px 2px;font-size:13px}}
+ details{padding:13px 0}summary{cursor:pointer;padding:10px 3px;list-style:none}summary::-webkit-details-marker{display:none}details[open] summary{margin-bottom:12px} .pickday.adjacent{background:#f2f4f7;color:#667085;border-style:dashed}.pickday.adjacent.chosen{background:#142e5b;color:white;border-style:solid}.day.other .staffing,.day.other .coverage{opacity:.8} 
+/* Kakao-inspired friendly UI; independent concept, not official Kakao product */
+:root{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#242424;background:#f6f6f4}
+body{background:#f6f6f4} .wrap{max-width:1320px;padding:16px 18px 92px}
+header{background:#fee500;border:0;border-radius:19px;padding:20px 23px;box-shadow:none}
+header h1{font-size:23px;font-weight:800;letter-spacing:-.8px;color:#242424}
+header small{color:#60570a}header .pill{background:#fff7b0;color:#453d00;font-weight:700}
+header label{font-size:12px;font-weight:700}header select{background:#fffdf1;border:1px solid #e3cc19;border-radius:13px;min-width:130px}
+.tabs{gap:7px;margin-bottom:14px;overflow:auto;flex-wrap:nowrap;padding:2px 0 4px}
+.tabs button{flex-shrink:0;background:white;border:1px solid #e9e9e5;border-radius:999px;padding:11px 17px;font-weight:700;color:#686868}
+.tabs button.active{background:#302d27;color:white;border-color:#302d27}
+.toolbar,.panel{border:1px solid #ededeb;border-radius:18px;background:white;box-shadow:0 3px 14px rgba(0,0,0,.025)}
+button,select,input,textarea{border-radius:12px;border-color:#e0e0dc;padding:11px}button{font-weight:650}button.primary{background:#fee500;color:#242424;border-color:#fee500;font-weight:800}
+button:hover{filter:brightness(.975)}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #e2cf37;outline-offset:2px}
+.month{font-size:20px}.weekday{color:#777;font-size:12px}
+.calendar{gap:6px}.day{border:1px solid #e9e9e5;border-radius:13px;min-height:190px;padding:10px;background:#fff}
+.day.other{background:#fafaf9;color:#999}.day.selected{outline:3px solid #fee500;outline-offset:0}
+.day.risk{border:2px solid #ed6b6b}.date{font-size:13px}.section{border-top:1px solid #f0f0ed}.section b{color:#757575;font-size:11px}
+.note{background:#fff8d8;border-radius:7px;padding:5px;color:#61550c}.warning,.redflag{color:#dc4545}
+.pickday{border-color:#e6e6e3;border-radius:12px}.pickday.chosen,.pickday.adjacent.chosen{background:#fee500;border-color:#e7d200;color:#252525}
+.pill{background:#f4f4f2;color:#525252}.request{border-radius:14px;background:#fdfdfc}.risknote{background:#fff3f3;border-color:#f3cccc}
+.footer{color:#777;line-height:1.6}.panel h2{font-size:18px;letter-spacing:-.4px}
+/* Primary navigation at bottom on small screens */
+.bottomnav{display:none}
+@media(max-width:760px){
+.wrap{padding:10px 9px 96px}header{padding:17px 15px;border-radius:16px;align-items:flex-start}header h1{font-size:19px}header .row{width:100%;justify-content:space-between}
+.tabs{display:none}.bottomnav{position:fixed;display:flex;bottom:0;left:0;right:0;z-index:20;background:white;border-top:1px solid #ecece9;padding:8px 6px calc(9px + env(safe-area-inset-bottom));box-shadow:0 -5px 20px rgba(0,0,0,.045);gap:4px;justify-content:space-around}
+.bottomnav button{border:0;background:transparent;padding:6px 2px;min-width:0;flex:1;font-size:10px;color:#888;display:grid;gap:4px;justify-items:center}
+.bottomnav button.active{color:#242424;font-weight:850}.bottomnav button.active .navicon{background:#fee500}
+.navicon{width:35px;height:30px;display:grid;place-items:center;border-radius:11px;font-size:19px}
+.layout{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(7,minmax(116px,1fr));overflow-x:auto;padding-bottom:5px}.day{min-height:172px;padding:7px}
+#calendarTab>.layout>div:first-child{overflow-x:auto}.toolbar{padding:10px;gap:7px}.toolbar .muted{width:100%;font-size:11px}
+.pickcal{max-width:none;gap:4px}.pickday{min-height:48px;padding:6px 2px}.panel{padding:14px}
+}
+
+.admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.admin-head h2,.admin-head h3{margin:4px 0}.admin-menu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 24px}.admin-menu-btn{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:#fafaf8;border:1px solid #ecece8;border-radius:16px;padding:16px;font-size:21px}.admin-menu-btn b{font-size:14px;color:#333}.admin-menu-btn small{font-size:11px;color:#777}.admin-menu-btn.active{background:#fff8c5;border:2px solid #f2d500;padding:15px}.direct-filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}.direct-filters label{display:grid;gap:5px}.direct-filters select{width:100%}.wide-action{width:100%;margin-top:12px}.shift-bulk{background:#fafaf8;padding:14px;border-radius:15px;margin-bottom:14px}.bulk-people{display:flex;flex-wrap:wrap;gap:12px;margin:13px 0}.bulk-people label{white-space:nowrap;display:flex;align-items:center;gap:7px;padding:7px 9px;border:1px solid #e5e5e2;border-radius:9px;background:#fff;min-height:40px}.bulk-people input[type="checkbox"]{width:18px;height:18px;margin:0;flex:0 0 18px;accent-color:#e2c400}.shift-person{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid #eee}.shift-person select{max-width:190px}.shift-list{margin-bottom:14px}@media(max-width:760px){.admin-menu-btn{padding:10px 7px;font-size:18px}.admin-menu-btn.active{padding:9px 6px}.admin-menu-btn b{font-size:12px}.admin-menu-btn small{font-size:10px}.direct-filters{grid-template-columns:1fr 1fr}.shift-person select{max-width:160px}}
+
+/* v7: readable shared calendar */
+.day{min-height:225px;padding:12px}.date{font-size:19px}.section{font-size:15px;line-height:1.6}.section b{font-size:15px;color:#262626}.names{font-size:15px;font-weight:500}.note,.warning{font-size:13px}.weekday{font-size:15px}.calendar{grid-template-columns:repeat(7,minmax(155px,1fr));overflow-x:auto}.jump{display:flex;align-items:center;gap:6px;font-size:14px}.toolbar{overflow-x:auto}#calendarTab{overflow-x:auto}@media(max-width:760px){.calendar{grid-template-columns:repeat(7,minmax(165px,1fr))}.day{min-height:225px}.section,.section b,.names{font-size:15px}}
+
+/* v8: persistent bottom category navigation for desktop and mobile */
+.tabs{display:none!important}
+.bottomnav{position:fixed!important;display:flex!important;bottom:0;left:0;right:0;z-index:20;background:#fff;border-top:1px solid #ecece9;padding:8px 6px calc(9px + env(safe-area-inset-bottom));box-shadow:0 -5px 20px rgba(0,0,0,.05);gap:4px;justify-content:space-around}
+.bottomnav button{border:0;background:transparent;padding:6px 2px;flex:1;min-width:0;font-size:11px;color:#777;display:grid;gap:4px;justify-items:center;cursor:pointer}
+.bottomnav button.active{color:#242424;font-weight:850}.bottomnav button.active .navicon{background:#fee500}
+.navicon{width:35px;height:30px;display:grid;place-items:center;border-radius:11px;font-size:19px}
+.wrap{padding-bottom:110px}
+.req-scroll{overflow-x:auto}.req-scroll .calendar{grid-template-columns:repeat(7,minmax(130px,1fr));min-width:930px}
+.req-scroll .day{min-height:155px;cursor:default}.req-person{border-bottom:1px solid #eee;padding:5px 0;font-size:13px;line-height:1.45}.req-state{font-size:11px;color:#6b7280}.req-scroll .day.risk{border:2px solid #e04a45}
+@media(max-width:760px){.wrap{padding-bottom:112px}}
+
+/* v9: adaptive layout for narrow Flip, folded Fold, unfolded Fold, tablets, desktop */
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{min-width:0;overflow-x:hidden}
+.wrap{width:100%;max-width:1560px;margin-inline:auto;padding-inline:clamp(9px,2vw,28px)}
+header{gap:12px}header .row{min-width:0}
+button,select,input,textarea{min-height:42px;max-width:100%}
+button{touch-action:manipulation}
+.panel,.toolbar,.day,.pickday{min-width:0}
+.month{font-size:clamp(17px,2vw,24px)}
+/* Calendar scrolls inside its own area on phone-sized displays; never shrinks names below legibility */
+#calendarTab,#requestsTab{min-width:0}
+#calendarTab>.calendar{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}
+.req-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
+.calendar .names{overflow-wrap:anywhere}
+.day .section,.day .section b,.day .names{font-size:clamp(14px,1.12vw,17px);line-height:1.55}
+.day .date{font-size:clamp(18px,1.5vw,22px)}
+.pickcal{width:100%;max-width:780px;gap:clamp(3px,.7vw,9px)}
+.pickday{font-size:clamp(12px,1.4vw,16px);min-height:clamp(48px,7vw,76px)}
+.pickday .dot{font-size:clamp(9px,1vw,12px)}
+.bottomnav{max-width:100vw;gap:clamp(0px,.7vw,10px);padding-inline:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(safe-area-inset-right))}
+.bottomnav button{font-size:clamp(10px,1.4vw,13px);min-height:49px}
+.navicon{font-size:clamp(19px,2vw,23px)}
+.admin-menu{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){
+ .calendar{grid-template-columns:repeat(7,minmax(155px,1fr))}
+ .req-scroll .calendar{grid-template-columns:repeat(7,minmax(155px,1fr));min-width:1085px}
+ .layout{grid-template-columns:minmax(0,1fr)}
+ .toolbar{flex-wrap:wrap}
+}
+@media (max-width:550px){
+ .wrap{padding:9px 8px calc(110px + env(safe-area-inset-bottom))}
+ header{padding:15px 13px}header h1{font-size:19px}
+ header .row{width:100%;justify-content:space-between}
+ .calendar{grid-template-columns:repeat(7,minmax(158px,1fr))}
+ .day{min-height:205px;padding:9px}
+ .panel{padding:12px}
+ .admin-menu{gap:6px}
+ .admin-menu-btn{min-width:0;padding:10px 6px}
+ .admin-menu-btn.active{padding:9px 5px}
+ .admin-menu-btn b{font-size:12px}
+ .direct-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pickcal{gap:3px}
+ .pickday{padding:5px 1px;min-height:53px;font-size:12px}
+ .pickday .dot{font-size:9px}
+ .bottomnav{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+}
+@media (min-width:551px) and (max-width:1000px){
+ .wrap{padding-inline:clamp(12px,2vw,24px)}
+ .calendar{grid-template-columns:repeat(7,minmax(158px,1fr))}
+ .admin-menu-btn{padding:14px 12px}
+}
+@media (min-width:1001px){
+ .calendar{grid-template-columns:repeat(7,minmax(0,1fr))}
+ .req-scroll .calendar{min-width:0;grid-template-columns:repeat(7,minmax(0,1fr))}
+ .day{min-height:245px}
+ .bottomnav{max-width:900px;left:50%;right:auto;width:100%;transform:translateX(-50%);border-left:1px solid #ecece9;border-right:1px solid #ecece9;border-radius:16px 16px 0 0}
+}
+@media (orientation:landscape) and (max-height:520px){
+ .bottomnav{padding-top:3px;padding-bottom:calc(3px + env(safe-area-inset-bottom))}
+ .bottomnav button{min-height:40px;gap:1px}
+ .navicon{height:24px}
+}
+
+/* v12: fit seven days on screen, no horizontal calendar drag */
+:root{font-family:'SamsungOne','Samsung One','SamsungOneUI','SamsungOne 400','SamsungOne 700','One UI Sans','Malgun Gothic',sans-serif}
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+#calendarTab,#requestsTab,.req-scroll{overflow-x:hidden!important;width:100%;max-width:100%;}
+#calendarTab .calendar,#requestCalendar,.req-scroll .calendar{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;min-width:0!important;width:100%!important;overflow:visible!important;gap:clamp(2px,.45vw,8px)}
+#calendarTab .day,.req-scroll .day{min-width:0!important;min-height:clamp(102px,15vw,220px);padding:clamp(2px,.65vw,12px);border-radius:clamp(4px,1vw,13px)}
+#calendarTab .date,.req-scroll .date{font-size:clamp(11px,1.4vw,21px);margin-bottom:3px}
+#calendarTab .section,.req-scroll .section{font-size:clamp(9px,1.05vw,16px);line-height:1.35;margin-top:3px;padding-top:3px;overflow-wrap:anywhere}
+#calendarTab .section b,.req-scroll .section b{font-size:clamp(9px,1.05vw,16px);line-height:1.3}
+#calendarTab .names,.req-scroll .names{font-size:clamp(9px,1.05vw,16px);line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.req-person{font-size:clamp(9px,1vw,14px);line-height:1.3;padding:3px 0;overflow-wrap:anywhere}
+.req-state{font-size:clamp(8px,.8vw,11px)}
+.weekday{font-size:clamp(10px,1.2vw,16px);padding:5px 0}
+.day .note,.day .warning{font-size:clamp(8px,.9vw,13px);overflow-wrap:anywhere}
+@media(max-width:600px){.wrap{padding-left:5px;padding-right:5px}.day.other{opacity:.75}#calendarTab .day,.req-scroll .day{min-height:105px}#calendarTab .section,.req-scroll .section{border-top:0}#calendarTab .section b,.req-scroll .section b{font-weight:750}.toolbar{gap:4px}.toolbar button,.toolbar select,.toolbar input{padding:7px 5px;min-height:36px}.jump{gap:3px;font-size:11px}.jump input{width:69px!important}}
+@media(min-width:700px){#calendarTab .day,.req-scroll .day{min-height:180px}}
+/* SamsungOne uses installed device font when available; no proprietary font files bundled */
+button,select,input,textarea{font-family:inherit}
+.bottomnav .navicon{font-size:0;display:flex;align-items:center;justify-content:center}
+.bottomnav .navicon svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Compact custom account popover instead of OS full-screen select */
+header{position:relative}header .row>label{display:none}
+.account-control{position:relative;display:flex;align-items:center}
+#accountToggle{border:1px solid #d9c617;background:#fff9bf;border-radius:12px;padding:9px 12px;min-height:40px;white-space:nowrap}
+.account-menu{position:absolute;top:calc(100% + 6px);right:0;width:min(225px,75vw);max-height:min(330px,55vh);overflow:auto;background:#fff;border:1px solid #e8e4d6;border-radius:14px;padding:6px;z-index:60;box-shadow:0 8px 28px #0002}
+.account-menu button{display:block;width:100%;text-align:left;border:0;border-radius:8px;background:transparent;padding:10px 12px;min-height:38px}
+.account-menu button[aria-selected=true]{background:#fff2a0;font-weight:800}
+.account-menu button:hover{background:#f6f6f4}
+
+.min-table-wrap{width:100%;overflow-x:hidden}.min-table{width:100%;table-layout:fixed;border-collapse:collapse}.min-table th,.min-table td{padding:9px 6px;border-bottom:1px solid #e7e7e7;text-align:center}.min-table th:first-child{width:32%}.min-table input{width:100%;min-width:0;max-width:130px;padding:10px 4px;text-align:center;font-size:16px}.min-date{font-weight:700;white-space:nowrap}.min-table thead{position:sticky;top:0;background:#fff8cf;z-index:1}
+#calendar .section{margin-top:5px}#calendar .section b{font-size:clamp(10px,1.5vw,15px)}#calendar .names{overflow-wrap:anywhere}
+@media(max-width:430px){.min-table th,.min-table td{padding:6px 3px}.min-table input{font-size:15px;padding:9px 2px}}
+
+/* v14: shared calendar readability */
+#calendar .day{display:flex;flex-direction:column;gap:clamp(3px,.6vw,8px);padding:clamp(3px,.65vw,12px);min-width:0}
+#calendar .date{font-size:clamp(12px,1.4vw,20px);font-weight:850;margin:0;line-height:1.2}
+#calendar .schedule-heading,#calendar .schedule-label{font-size:clamp(8px,.9vw,12px);font-weight:700;color:#7a7d83;letter-spacing:-.035em;line-height:1.25}
+#calendar .schedule-heading{border-bottom:1px solid #e8e8e5;padding-bottom:3px}
+#calendar .shift-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;border:1px solid #e6e7e8;border-radius:7px;overflow:hidden;min-width:0}
+#calendar .shift-split .schedule-section{padding:clamp(2px,.38vw,6px);min-width:0;border:0}
+#calendar .shift-split .schedule-section+.schedule-section{border-left:1px solid #e6e7e8}
+#calendar .schedule-section{min-width:0;border-top:1px solid #f0f0f0;padding-top:clamp(2px,.3vw,5px)}
+#calendar .schedule-names{font-size:clamp(10px,1.17vw,17px);font-weight:650;line-height:1.35;overflow-wrap:anywhere;word-break:keep-all;white-space:normal;color:#222}
+#calendar .shift-split .schedule-names{font-size:clamp(9px,1.02vw,15px)}
+#calendar .weekday.sun,#calendar .day.is-sunday .date{color:#dc3434!important}
+#calendar .weekday.sat,#calendar .day.is-saturday:not(.is-sunday) .date{color:#2672cf!important}
+#calendar .holiday-dot{font-size:8px;margin-left:3px;vertical-align:middle}
+#calendar .day.is-sunday{border-top:2px solid #e25757}
+#calendar .day.is-saturday:not(.is-sunday){border-top:2px solid #478ce0}
+@media(max-width:600px){#calendar .day{gap:3px}#calendar .shift-split{border-radius:3px}#calendar .schedule-names{font-size:clamp(9px,2.35vw,13px)}#calendar .shift-split .schedule-names{font-size:clamp(8px,2vw,11px)}#calendar .schedule-label,#calendar .schedule-heading{font-size:clamp(7px,1.9vw,10px)}}
+
+/* v18: denser full-width shift rows, with closing staff allotted two lines */
+#calendar .day{gap:2px;padding:clamp(2px,.42vw,8px)}
+#calendar .schedule-heading{padding-bottom:1px;line-height:1.05}
+#calendar .shift-stacked{display:flex;flex-direction:column;gap:2px;min-width:0}
+#calendar .shift-stacked .schedule-section{display:flex;flex-direction:column;gap:1px;border:1px solid #e6e7e8;border-radius:4px;padding:2px 3px;min-width:0}
+#calendar .shift-open .schedule-section{background:#f7faff}
+#calendar .shift-close .schedule-section{background:#fbfbfb}
+#calendar .shift-stacked .schedule-label{font-size:clamp(7px,.8vw,10px);line-height:1.05}
+#calendar .shift-stacked .schedule-names{font-size:clamp(10px,1.05vw,15px);line-height:1.22;word-break:keep-all;overflow-wrap:normal}
+#calendar .shift-open .schedule-names{min-height:1.22em}
+#calendar .shift-close .schedule-names{min-height:2.44em}
+#calendar .compact-extras{display:flex;flex-direction:column;gap:1px;min-width:0}
+#calendar .compact-extras .schedule-section{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:4px;row-gap:0;border-top:1px solid #f0f0f0;padding:1px 0 0;min-width:0}
+#calendar .compact-extras .schedule-label{font-size:clamp(7px,.75vw,10px);line-height:1.1;flex-shrink:0}
+#calendar .compact-extras .schedule-names{font-size:clamp(9px,.95vw,14px);line-height:1.18;min-width:0}
+#calendar .day .note,#calendar .day .warning{margin:1px 0;padding:1px 2px;line-height:1.12}
+@media(max-width:600px){
+ #calendar .day{gap:1px;padding:2px}
+ #calendar .shift-stacked{gap:1px}
+ #calendar .shift-stacked .schedule-section{padding:2px 1px}
+ #calendar .shift-stacked .schedule-names{font-size:clamp(8px,1.9vw,11px);line-height:1.2}
+ #calendar .compact-extras .schedule-names{font-size:clamp(8px,1.85vw,11px)}
+ #calendar .compact-extras .schedule-section{column-gap:2px}
+}
+.staff-editor-list{display:flex;flex-direction:column;gap:6px;margin:12px 0}.staff-editor-row{display:grid;grid-template-columns:minmax(55px,1fr) minmax(0,2fr) auto;gap:8px;align-items:center}.staff-editor-row input{min-width:0;width:100%}.staff-add{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:16px 0}.staff-add label{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px}.staff-add input,.staff-add select{width:100%;min-width:0}@media(max-width:430px){.staff-editor-row{gap:4px;grid-template-columns:minmax(44px,1fr) minmax(0,1.7fr) auto}.staff-editor-row button{padding:8px 5px}}
+
+#calendar .calendar-memo{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin-top:2px;border-top:1px dashed #e8e1c6;padding-top:2px;min-width:0}
+#calendar .memo-text,.shared-memo{display:block;font-size:clamp(8px,.85vw,12px);font-weight:600;color:#795b10;overflow-wrap:anywhere;line-height:1.25}
+#calendar .memo-edit{padding:1px 3px;font-size:clamp(8px,.75vw,10px);line-height:1.1;background:#fff8d8;border:1px solid #ebdca6;border-radius:3px;color:#7d641d;white-space:nowrap}
+.pickday .shared-memo,.req-day-list .shared-memo{background:#fff8dd;border-radius:3px;padding:2px;margin:2px 0;text-align:left}
+
+/* v31: compact public calendar memo row */
+#calendar .calendar-memo{margin-top:0!important;padding-top:1px!important;gap:2px!important;min-height:0!important;line-height:1.05!important;flex-wrap:nowrap!important;overflow:hidden}
+#calendar .calendar-memo:empty{display:none!important}
+#calendar .calendar-memo .memo-text{font-size:clamp(7px,.72vw,10px)!important;line-height:1.12!important;font-weight:400!important;min-width:0;flex:1;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#calendar .calendar-memo .memo-edit{font-size:clamp(7px,.65vw,9px)!important;padding:0 2px!important;line-height:1.1!important;flex-shrink:0}
+@media(max-width:600px){#calendar .calendar-memo{padding-top:0!important;margin-top:0!important}#calendar .calendar-memo .memo-text{font-size:7px!important;-webkit-line-clamp:2}#calendar .calendar-memo .memo-edit{font-size:7px!important;padding:0 1px!important}}
+
+/* v22: centered, fluid layout and genuine side-by-side shift columns */
+html{scrollbar-gutter:stable}
+body{width:100%;margin:0}
+.wrap{width:100%;max-width:1500px;margin-inline:auto!important;padding-inline:clamp(6px,1.8vw,26px);min-width:0}
+.wrap>header,.wrap>.panel,.wrap>#calendarTab,.wrap>.footer{width:100%;max-width:100%;margin-inline:auto}
+header{justify-content:center;text-align:center}
+header>.row{justify-content:center}
+.toolbar,.pickbar{justify-content:center}
+.month,#monthLabel,#applyMonthLabel,#reqMonthLabel,#minMonthLabel,#directMonthLabel{text-align:center}
+.panel,.toolbar,.day,.pickday,.admin-menu-btn,.request,.staff-editor-row{min-width:0}
+p,small,.muted,.footer,label,summary,.admin-menu-btn small,.admin-menu-btn b,.pill{overflow-wrap:anywhere;word-break:keep-all;white-space:normal;line-height:1.5}
+#calendar .shift-two-columns{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:stretch;gap:0;min-width:0;width:100%;overflow:hidden;border:1px solid #e6e7e8;border-radius:5px}
+#calendar .shift-two-columns>.shift-open,#calendar .shift-two-columns>.shift-close{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+#calendar .shift-two-columns>.shift-open{border-right:1px solid #e6e7e8;background:#f7faff}
+#calendar .shift-two-columns>.shift-close{background:#fbfbfb}
+#calendar .shift-two-columns .schedule-section{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;padding:clamp(2px,.38vw,7px);border:0!important;background:transparent}
+#calendar .shift-two-columns .schedule-label{font-size:clamp(7px,.8vw,11px);line-height:1.1}
+#calendar .shift-two-columns .schedule-names{font-size:clamp(9px,1.08vw,16px);font-weight:650;line-height:1.25;white-space:normal;overflow-wrap:anywhere;word-break:keep-all;min-height:0!important}
+#calendar .compact-extras{min-width:0}
+#calendar .compact-extras .schedule-names{overflow-wrap:anywhere}
+@media(max-width:600px){
+ .wrap{padding-inline:clamp(3px,1vw,8px);padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+ header{padding:10px 7px}
+ header>.row{width:100%;justify-content:center}
+ .panel{padding:clamp(7px,2vw,12px)}
+ #calendar .shift-two-columns .schedule-section{padding:2px 1px;gap:1px}
+ #calendar .shift-two-columns .schedule-names{font-size:clamp(8px,1.85vw,12px);line-height:1.2}
+ #calendar .shift-two-columns .schedule-label{font-size:clamp(7px,1.55vw,9px)}
+ .toolbar{justify-content:center}
+}
+
+.admin-picto{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:#343434;flex-shrink:0}
+.admin-picto svg{width:100%;height:100%;display:block}
+.admin-menu-btn{font-size:inherit}
+@media(max-width:760px){.admin-picto{width:22px;height:22px}}
+
+/* v24: softer charcoal text palette */
+:root{color:#3C4046}
+body{color:#3C4046}
+header h1,h1,h2,h3,h4,.month,.date,.names,#calendar .schedule-names,.admin-menu-btn b{color:#343A40}
+button,select,input,textarea,th,td,label,summary{color:#3C4046}
+button.primary,.bottomnav button.active{color:#343A40}
+.section b,#calendar .schedule-heading,#calendar .schedule-label{color:#727983}
+
+/* v26: lighter typography, less heavy emphasis */
+:root{color:#626A73;font-family:SamsungOne,"Samsung One","SamsungOne 400",system-ui,-apple-system,"Malgun Gothic",sans-serif}
+body{color:#626A73;font-weight:400}
+h1,h2,h3,h4,header h1,.month,.date,.names,#calendar .schedule-names,.admin-menu-btn b{color:#505861;font-weight:500!important}
+button,select,input,textarea,th,td,label,summary{color:#626A73;font-weight:400}
+button.primary,.bottomnav button.active{color:#505861;font-weight:500!important}
+.section b,#calendar .schedule-heading,#calendar .schedule-label,.muted,small{color:#838A92;font-weight:400!important}
+#calendar .schedule-names,#calendar .shift-two-columns .schedule-names{font-weight:450!important;color:#555D66}
+#calendar .date{font-weight:550!important}
+.weekday,.pickhead,.pickday b,.min-date,.summary,.admin-menu-btn b,.bottomnav button{font-weight:500!important}
+header .pill,.pill,.tabs button,.tabs button.active,.bottomnav button.active,.account-menu button[aria-selected=true]{font-weight:500!important}
+
+/* v25: center the leave-application calendar on every viewport */
+#applyTab #applyCalendar{display:grid;width:100%;max-width:780px;margin-left:auto!important;margin-right:auto!important;grid-template-columns:repeat(7,minmax(0,1fr));justify-content:center;box-sizing:border-box}
+#applyTab>.pickbar:first-of-type{width:100%;max-width:780px;margin-left:auto;margin-right:auto;justify-content:center}
+#applyTab #applyCalendar .pickday,#applyTab #applyCalendar .pickhead{min-width:0}
+#applyTab{min-width:0}
+
+/* v27: 모든 저장/확정 결과를 눈에 띄게 알리는 중앙 알림 */
+#toast{position:fixed!important;top:18%!important;bottom:auto!important;left:50%!important;transform:translateX(-50%)!important;display:none;align-items:center;gap:12px;box-sizing:border-box;min-width:min(310px,calc(100vw - 32px));max-width:min(480px,calc(100vw - 32px));padding:16px 18px!important;background:#fff!important;color:#505861!important;border:1px solid #e2e6ea;border-radius:16px!important;box-shadow:0 14px 50px rgba(35,45,55,.22);z-index:99999!important;font-family:SamsungOne,'Samsung One',system-ui,sans-serif;font-size:15px;line-height:1.5;overflow-wrap:anywhere;word-break:keep-all}
+#toast .toast-symbol{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:#e9f5ee;color:#288052;font-size:20px;font-weight:500}
+#toast.toast-error .toast-symbol{background:#fff1ed;color:#bb5a42}
+#toast .toast-message{flex:1;min-width:0;font-weight:400}
+#toast .toast-close{flex:none;padding:0 4px;border:0;background:transparent;color:#929aa2;font-size:23px;line-height:1;cursor:pointer}
+@media(max-width:520px){#toast{top:14%!important;font-size:14px;min-width:calc(100vw - 40px)}}
+
+/* v28: 월 지정은 왼쪽, 한 달 이동은 오른쪽 */
+#calendarTab .calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%}
+#calendarTab .month-jump,#calendarTab .month-navigation{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap}
+#calendarTab .month-jump{justify-content:flex-start}
+#calendarTab .month-navigation{justify-content:flex-end;margin-left:auto}
+#calendarTab .month-jump .jump{display:flex;align-items:center;gap:4px;white-space:nowrap}
+#calendarTab .month-jump input{width:74px!important;min-width:0}
+#calendarTab .month-jump select{min-width:65px}
+#calendarTab .month-navigation .month{white-space:nowrap;font-size:clamp(14px,1.7vw,22px)}
+/* Slim single-row app title and account selector */
+.wrap>header{display:flex;flex-direction:row;justify-content:space-between;align-items:center;text-align:left;flex-wrap:nowrap;gap:10px;padding:10px 15px;border-radius:13px}
+.wrap>header>div:first-child{min-width:0;flex:1}
+.wrap>header h1{font-size:clamp(14px,2vw,19px);line-height:1.25;margin:0;letter-spacing:-.45px;white-space:normal}
+.wrap>header>div:first-child>small{display:none}
+.wrap>header>.row{width:auto;flex:none;display:flex;justify-content:flex-end;gap:5px;flex-wrap:nowrap;min-width:0}
+.wrap>header .pill{font-size:10px;padding:3px 6px;white-space:nowrap}
+#accountToggle{font-size:clamp(11px,1.5vw,13px);padding:6px 9px;min-height:34px;max-width:145px;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:600px){
+ .wrap>header{padding:9px 8px;gap:5px}
+ .wrap>header h1{font-size:clamp(12px,3.1vw,16px)}
+ .wrap>header .pill{display:none}
+ #accountToggle{max-width:105px;padding:6px;font-size:11px}
+ #calendarTab .calendar-toolbar{gap:7px}
+ #calendarTab .month-jump{gap:3px}
+ #calendarTab .month-navigation{gap:3px}
+ #calendarTab .calendar-toolbar button{min-height:34px;padding:5px 7px;font-size:12px}
+ #calendarTab .month-jump input{width:66px!important;min-height:34px;padding:4px}
+ #calendarTab .month-jump select{min-height:34px;padding:4px}
+}
+.confirmed-manage{margin:14px 0;padding:12px;border:1px solid #e1e4e7;border-radius:12px;max-width:100%;min-width:0}.confirmed-manage h3{margin:0;font-size:15px}.confirmed-list{max-height:260px;overflow-y:auto}.confirmed-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #edf0f2;font-size:13px;overflow-wrap:anywhere}.confirmed-item span{min-width:0;flex:1}.confirmed-select{width:17px;height:17px;flex:0 0 auto;accent-color:#626A73}.confirmed-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:9px 0}.confirmed-actions label{display:flex;align-items:center;gap:6px;font-size:12px}.confirmed-bulk-delete{color:#b64a4a;border:1px solid #e8c7c7;background:#fff7f7;border-radius:8px;padding:8px 12px}.confirmed-bulk-delete:disabled{opacity:.45;cursor:not-allowed}.confirmed-delete{flex-shrink:0;color:#b64a4a;border:1px solid #e8c7c7;background:#fff7f7;border-radius:8px;padding:7px 11px}.confirmed-filters{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.confirmed-filter{border:1px solid #e0e3e6;border-radius:9px;background:#fff;color:#626A73;padding:8px 11px;font-size:12px;font-weight:400;cursor:pointer}.confirmed-filter.active{background:#f2f3f5;border-color:#626A73;color:#505861}.confirmed-empty{padding:12px 4px;font-size:13px;color:#838A92}
+/* v33 unified settings and calendar admin editing */
+.unified-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin-bottom:18px}
+.unified-menu .admin-menu-btn{min-width:0;white-space:normal;text-align:center;overflow-wrap:anywhere}
+.unified-pane{border-top:1px solid #e8eaee;padding:16px 0;min-width:0}
+.calendar-admin-actions{display:flex;justify-content:flex-end;margin:0 0 12px}
+.calendar-confirm-panel{background:#fff;border:1px solid #e1e5ed;border-radius:14px;padding:14px;margin:0 0 16px;min-width:0}
+.calendar-confirm-panel .confirmed-manage{overflow-wrap:anywhere}
+@media(max-width:520px){.unified-menu{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-confirm-panel{padding:9px}.calendar-admin-actions button{font-size:12px}}
+.pending-admin-panel{margin:0 0 16px;padding:14px;border:1px solid #e1e4e8;border-radius:12px;background:#fff}.pending-admin-panel .admin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.pending-admin-panel .request{margin:7px 0;padding:9px 10px}.pending-people{display:flex;gap:5px 10px;flex-wrap:wrap;margin-top:5px;overflow-wrap:anywhere}.pending-admin-panel button{white-space:normal}
+
+/* v36: 관리자 신청현황 직원별 근무조 구분 */
+.admin-staff-summary{padding:10px 12px;margin:8px 0;min-width:0}
+.admin-staff-date{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.admin-risk-label{color:#cf4444;font-size:11px;font-weight:600}
+.admin-staff-groups{display:grid;grid-template-columns:1fr;gap:4px}
+.admin-staff-group{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:7px;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.admin-staff-group>span{color:#89919a;font-size:11px}
+.admin-staff-group>div{color:#535b64;min-width:0}
+/* v62: 모든 월(월 이동/연도 변경 포함)의 일자별 현황에 동일한 이름 크기 적용 */
+#calendarConfirmPanel #pendingAdminList .admin-staff-summary .admin-staff-groups .admin-staff-group > div,
+#calendarConfirmPanel #pendingAdminList .admin-staff-summary .admin-staff-groups .admin-staff-group > div * {font-size:15px!important;line-height:1.65!important;font-weight:500}
+@media(max-width:520px){
+ #calendarConfirmPanel #pendingAdminList .admin-staff-summary .admin-staff-groups .admin-staff-group > div,
+ #calendarConfirmPanel #pendingAdminList .admin-staff-summary .admin-staff-groups .admin-staff-group > div * {font-size:14px!important}
+}
+/* v61: 일자별 현황 직원 이름 가독성 개선 */
+#pendingAdminList .admin-staff-group>div{font-size:15px;line-height:1.65;font-weight:500}
+@media(max-width:520px){#pendingAdminList .admin-staff-group>div{font-size:14px;line-height:1.65}}
+.admin-staff-group.off{border-top:1px solid #eceef0;padding-top:5px;margin-top:2px}
+
+/* v38: clearer attendance states and one-line compact memo */
+#calendar .shift-two-columns{border-color:#d8e9dc!important;background:#eff8f0!important}
+#calendar .shift-two-columns>.shift-open,
+#calendar .shift-two-columns>.shift-close{background:#edf8ef!important}
+#calendar .shift-two-columns>.shift-open{border-right:1px solid #d3e8d8!important}
+#calendar .schedule-heading{font-size:clamp(8px,.75vw,11px)!important;line-height:1.12!important;margin:0!important}
+#calendar .shift-two-columns .schedule-label{font-size:clamp(7px,.75vw,10px)!important;color:#72917b!important}
+#calendar .shift-two-columns .schedule-names{font-size:clamp(11px,1.2vw,18px)!important;line-height:1.32!important;color:#435a4a!important;font-weight:500!important}
+#calendar .compact-extras{display:grid!important;gap:2px!important;margin-top:2px!important}
+#calendar .compact-extras .schedule-section{display:grid!important;grid-template-columns:clamp(23px,2.5vw,38px) minmax(0,1fr)!important;align-items:start!important;gap:2px!important;margin:0!important;padding:3px 4px!important;border:1px solid transparent!important;border-radius:4px!important}
+#calendar .compact-extras .schedule-section:first-child{background:#f1f2f4!important;border-color:#e7e9ec!important}
+#calendar .compact-extras .schedule-section:nth-child(2){background:#fff0ef!important;border-color:#f7dfdc!important}
+#calendar .compact-extras .schedule-section:first-child .schedule-label{color:#8d929a!important}
+#calendar .compact-extras .schedule-section:nth-child(2) .schedule-label{color:#bf8580!important}
+#calendar .compact-extras .schedule-names{font-size:clamp(10px,1.12vw,17px)!important;line-height:1.25!important;font-weight:500!important;color:#59616a!important}
+#calendar .compact-extras .schedule-section:nth-child(2) .schedule-names{color:#936661!important}
+#calendar .calendar-memo{height:auto!important;min-height:0!important;max-height:18px!important;padding:0 1px!important;margin-top:1px!important;border-top:0!important;gap:2px!important;display:flex!important;align-items:center!important;flex-wrap:nowrap!important;overflow:hidden!important}
+#calendar .calendar-memo .memo-text{display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;line-height:1.1!important;flex:1!important;font-size:clamp(8px,.76vw,11px)!important}
+#calendar .calendar-memo .memo-edit{flex-shrink:0!important;font-size:clamp(7px,.65vw,9px)!important;line-height:1!important;padding:1px 2px!important;min-height:0!important}
+@media(max-width:600px){
+ #calendar .shift-two-columns .schedule-names{font-size:clamp(9px,2.1vw,12px)!important}
+ #calendar .compact-extras .schedule-names{font-size:clamp(9px,2vw,12px)!important}
+ #calendar .compact-extras .schedule-section{grid-template-columns:23px minmax(0,1fr)!important;padding:2px 2px!important}
+ #calendar .calendar-memo{max-height:14px!important}
+ #calendar .calendar-memo .memo-text{font-size:8px!important}
+}
+
+.calendar-admin-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.calendar-admin-actions button{white-space:normal;overflow-wrap:anywhere}
+.draft-tag,.final-tag{display:inline-block;font-size:9px;font-weight:500;border-radius:5px;padding:1px 3px;margin-left:3px;vertical-align:middle}
+.draft-tag{background:#fff2c7;color:#8b6b20}.final-tag{background:#e2f3e5;color:#40754e}
+@media(max-width:450px){.calendar-admin-actions button{font-size:11px;padding:7px 8px}}
+.fixed-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0}.fixed-controls label{display:flex;flex-direction:column;gap:6px;font-size:13px}.fixed-controls input,.fixed-controls select{max-width:100%;min-width:0}.fixed-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:12px 0}.fixed-weekdays label{border:1px solid #e4e5e7;border-radius:8px;padding:8px 2px;text-align:center;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px}.fixed-weekdays input{margin:0}.fixed-preview{background:#f6f7f8;border-radius:12px;padding:12px;margin-top:12px;line-height:1.8}.fixed-preview .fixed-warning{color:#b54848}.fixed-batch{border-bottom:1px solid #e8e9eb;padding:10px 0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.fixed-batch button{font-size:12px} .special-entry{border:1px solid #e4e7e9;border-radius:14px;padding:14px;margin:12px 0 18px;background:#fafbfc}.special-entry h3{margin:0 0 6px}.special-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0}.special-fields label{display:flex;flex-direction:column;gap:5px;font-size:13px}.special-fields input,.special-fields select{width:100%;min-width:0;box-sizing:border-box}.direct-filters.hidden,.pickbar.hidden,#directCalendar.hidden,#directRisk.hidden,#directSave.hidden,#draftStatus.hidden,#publishDirect.hidden{display:none!important} .special-calendar-toolbar{width:100%;max-width:none;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}.special-calendar-toolbar button{padding:7px 13px;border-radius:9px;border:1px solid #e2e5e8;background:white;cursor:pointer}.special-calendar-toolbar strong{font-size:15px;color:#505861}.special-multi-calendar{width:100%;max-width:none;box-sizing:border-box;margin:8px 0 12px;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:white}.special-weekdays,.special-date-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}.special-weekdays span{font-size:12px;color:#777;padding:6px}.special-day{min-height:38px;border:1px solid #e2e5e8;background:#fff;border-radius:8px;cursor:pointer}.special-day.picked{background:#fee500;border-color:#e0c900;font-weight:700}.special-day.sat{color:#2869c7}.special-day.sun{color:#cf4444}.special-day.picked{color:#363636}.special-day.outside{background:#f2f3f5;color:#a0a5ac;border-color:#e9eaed}.special-day.outside.picked{background:#fee500;color:#363636;border-color:#e0c900}.special-weekdays span:first-child{color:#cf4444}.special-weekdays span:last-child{color:#2869c7}#specialSelectedCount{overflow-wrap:anywhere} 
+/* v59: centered, legible leave-request view for the all-account */
+#applyTab .pickcal{margin:14px auto 18px;max-width:720px;width:100%}
+#applyTab>.pickbar{justify-content:center;align-items:center;gap:10px;max-width:720px;margin:10px auto;flex-wrap:wrap}
+#applyTab>.pickbar strong{text-align:center;min-width:145px;font-size:clamp(16px,3vw,21px)}
+#applyTab>.pickbar label{min-width:130px}
+#applyTab>.pickbar select{width:100%}
+#applyTab>.primary{display:block;margin:18px auto;max-width:720px;width:100%}
+.apply-account-notice{max-width:720px;width:100%;margin:18px auto 8px;padding:18px 20px;border-radius:12px;background:#fff9df;border:1px solid #e9d98e;color:#655322;text-align:center;line-height:1.65;font-weight:650;overflow-wrap:break-word}
+#applyTab.apply-view-only>.pickbar:nth-of-type(3),#applyTab.apply-view-only #applyRisk,#applyTab.apply-view-only #applyBtn,#applyTab.apply-view-only #myRequests,#applyTab.apply-view-only>p{display:none!important}
+#applyTab.apply-view-only .pickday{cursor:default}
+@media(max-width:550px){#applyTab>.pickbar{gap:6px}#applyTab>.pickbar button{padding:9px 8px;font-size:12px}#applyTab>.pickbar strong{min-width:110px;font-size:15px}.apply-account-notice{padding:14px 12px;font-size:13px}#applyTab .pickcal{margin-top:12px}}
+
+/* v64: 근태 직접 등록 입력 항목과 달력 폭 일치 */
+.special-entry .special-fields,.special-entry .special-calendar-toolbar,.special-entry .special-multi-calendar{width:100%;max-width:none;box-sizing:border-box}
+.special-entry .special-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.special-entry .special-multi-calendar{margin-inline:0}
+@media(max-width:520px){.special-entry .special-fields{gap:6px}.special-entry .special-fields label{font-size:12px}.special-entry .special-fields select,.special-entry .special-fields input{padding:8px 5px;font-size:12px}.special-entry .special-day{min-height:40px}}
+</style><meta name="theme-color" content="#fee500"><meta name="application-name" content="오산점 스마트 근무관리"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon-192.png"><link rel="apple-touch-icon" href="./icon-192.png"></head><body><div class="wrap"><header><div><h1>오산점 스마트 근무관리</h1><small>휴무 즉시 신청 · 최소인원 경고 · 공용 출근부 (설치 테스트 · v67)</small></div><div class="row"><label>체험 계정 <select id="account"></select></label><div class="account-control"><button type="button" id="accountToggle" aria-haspopup="listbox" aria-expanded="false">계정 선택 ▾</button><div id="accountMenu" class="account-menu hidden" role="listbox" aria-label="계정 선택"></div></div><span id="role" class="pill"></span></div></header><nav class="tabs"><button data-tab="calendar" class="active">공용 출근부</button><button data-tab="apply">내 근태 신청</button><button data-tab="admin" class="adminOnly">설정</button></nav><div id="calendarTab"><div class="toolbar calendar-toolbar"><div class="month-jump"><label class="jump">연도 <input id="jumpYear" type="number" min="2020" max="2100" style="width:95px"></label><label class="jump">월 <select id="jumpMonth"></select></label><button id="jumpGo">이동</button></div><div class="month-navigation"><button id="prev" aria-label="이전 달">◀</button><span class="month" id="monthLabel"></span><button id="next" aria-label="다음 달">▶</button><button id="today">이번 달</button></div></div><div class="calendar-admin-actions"><button type="button" id="toggleCalendarConfirm" class="primary">일자별 현황</button><button type="button" id="finalizeCalendarMonth" class="primary">이달 근무표 최종 확정</button></div><div id="calendarConfirmPanel" class="calendar-confirm-panel hidden"><section class="pending-admin-panel" id="pendingAdminPanel"><div class="admin-head"><h3>날짜별 근무·휴무 예상 현황</h3></div><div id="pendingAdminList"></div></section><section id="adminConfirm" class="adminOnly"><div class="admin-head"><h3>관리자 특이근태 및 확정 내역</h3><button class="primary hidden" id="publishDirect">✓ 확정</button></div><div class="special-entry"><h3>근태 직접 등록</h3><p class="muted">관리자가 달력에서 여러 날짜를 선택해 휴무·반휴·교육·박람회·공가를 한 번에 등록합니다.</p><div class="special-fields"><label>직원<select id="specialEmployee"></select></label><label>적용 월<input id="specialMonth" type="month" value="2026-11"></label><label>근태 유형<select id="specialType"></select></label></div><div class="special-calendar-toolbar"><button type="button" id="specialPrevMonth" aria-label="이전 달">◀</button><strong id="specialMonthTitle">2026년 11월</strong><button type="button" id="specialNextMonth" aria-label="다음 달">▶</button></div><div id="specialMultiCalendar" class="special-multi-calendar" role="group" aria-label="근태 등록 날짜 다중 선택 달력"></div><p class="muted" id="specialSelectedCount">날짜를 선택하세요.</p><button type="button" class="primary" id="specialSave">선택한 날짜 일괄 등록</button><p class="muted" style="font-size:12px">기존 근태는 덮어쓰지 않습니다. 아래 목록에서 일반 휴무·특이근태·고정 휴무를 날짜별 또는 여러 건 선택해 삭제할 수 있습니다.</p><p class="muted adminOnly">※ 이달 근무표를 최종 확정한 후에도 관리자는 근태 직접 등록·삭제로 휴무, 연차, 반휴, 특이근태를 수정할 수 있습니다. 직원 신청만 잠깁니다.</p><div class="confirmed-manage"><h3>선택 직원의 등록 근태 삭제</h3><div id="specialDeleteList"></div></div></div><p id="draftStatus" class="muted hidden">공용 출근부에 반영할 변경사항이 없습니다.</p><div class="direct-filters hidden"><label>직원<select id="directEmployee"></select></label><label>확정 근태<select id="directType"></select></label></div><div class="pickbar hidden"><button id="directPrev">◀</button><strong id="directMonthLabel"></strong><button id="directNext">▶</button></div><div id="directCalendar" class="pickcal hidden"></div><div class="pickbar hidden"><span id="directCount" class="summary">선택 0일</span><button id="directClear">선택 해제</button></div><div id="directRisk" class="hidden"></div><div class="confirmed-manage"><div class="admin-head"><h3>확정된 휴무·특이근태 삭제</h3></div><p class="muted">휴무·특이근태만 조회하고 삭제할 수 있습니다. 삭제 시 해당 직원은 기본 근무조 출근으로 돌아갑니다.</p><div id="confirmedManageList"></div></div><button class="primary wide-action hidden" id="directSave">선택한 날짜 임시 등록</button></section></div><div class="calendar" id="calendar"></div></div><div id="applyTab" class="panel hidden"><div id="applyAccountNotice" class="apply-account-notice hidden">근태 신청은 우측 상단에서 직원 계정을 선택한 후 이용할 수 있습니다.</div><div class="pickbar"><button id="applyPrev">◀ 이전 달</button><strong id="applyMonthLabel"></strong><button id="applyNext">다음 달 ▶</button></div><div id="applyCalendar" class="pickcal"></div><div class="pickbar"><label>신청 유형<select id="applyType"></select></label><span id="selectedCount" class="summary">선택 0일</span><button id="clearSelection">선택 해제</button></div><div id="applyRisk"></div><button class="primary" id="applyBtn">선택한 날짜 일괄 신청</button><p><small>신청은 즉시 신청현황에 공개되며, 관리자가 신청현황 우측 상단의 확정을 누르면 공용 출근부에 반영됩니다.</small></p><div id="myRequests"></div></div><div id="requestsTab" class="panel hidden"><div class="admin-head"><h2>전체 직원 휴무 신청 달력</h2><button id="confirmRequests" class="primary hidden" style="font-weight:800">✓ 확정</button></div><p class="muted">직원 누구나 날짜별 신청자를 확인할 수 있습니다. 최소 인원이 부족할 것으로 예상되는 날짜는 빨간색으로 표시됩니다.</p><div class="toolbar"><button id="reqPrev">◀</button><strong id="reqMonthLabel"></strong><button id="reqNext">▶</button><button id="reqToday">이번 달</button></div><div class="req-scroll"><div id="requestCalendar" class="calendar"></div></div><div class="muted" style="margin-top:12px">신청 즉시 반영 · 본인 신청은 근태 신청 화면에서 취소 가능 · 인원 부족은 빨간색</div></div><div id="adminTab" class="panel hidden"><div class="admin-head"><div><small class="muted">관리자 전용</small><h2>설정</h2></div><span class="pill">관리자 전용</span></div><div class="admin-menu unified-menu">
+<button class="admin-menu-btn active" data-admin-page="collect"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M9 10v11M14 14h4M14 18h4"/></svg></span><b>최소 인원</b><small>일자별 입력</small></button>
+<button class="admin-menu-btn" data-admin-page="fixed"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 15l3 3 5-6"/></svg></span><b>고정 휴무 등록</b><small>직원·요일 일괄 등록</small></button><button class="admin-menu-btn" data-admin-page="shifts"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7" r="3"/><circle cx="17" cy="8" r="2.5"/><path d="M2 20v-3a6 6 0 0 1 12 0v3M14 14a5 5 0 0 1 8 4v2"/></svg></span><b>조별 설정</b><small>직원 근무조</small></button>
+<button class="admin-menu-btn" data-admin-page="types"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></span><b>근태 유형</b><small>종류 관리</small></button>
+<button class="admin-menu-btn" data-admin-page="times"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></span><b>근무시간</b><small>시간대 관리</small></button>
+<button class="admin-menu-btn" data-admin-page="staff"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 8h5M19.5 5.5v5"/></svg></span><b>직원 계정</b><small>이름·인원</small></button>
+<button class="admin-menu-btn" data-admin-page="managers"><span class="admin-picto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8 12 3 3 5-6"/></svg></span><b>관리자 지정</b><small>권한 관리</small></button></div><section id="adminCollect"><h3>일자별 최소 인원 설정</h3><p class="muted">기본 인원 규칙은 유지하면서 날짜별 필요 인원을 변경할 수 있습니다. 신청 현황의 빨간 경고에 즉시 반영됩니다.</p><div class="pickbar"><button id="minPrev">◀ 이전 달</button><strong id="minMonthLabel"></strong><button id="minNext">다음 달 ▶</button></div><div id="minimumEditor"></div><h3>인원 부족 예상 날짜</h3><div id="adminRequests"></div></section><section id="adminFixed" class="hidden"><h3>고정 휴무 등록</h3><p class="muted">선택한 달에만 등록됩니다. 직원과 요일을 선택하고 미리보기에서 인원 부족을 확인하세요. 기존 신청·근태가 있는 날짜는 덮어쓰지 않습니다.</p><div class="fixed-controls"><label>적용 월 <input id="fixedMonth" type="month" value="2026-12"></label><label>직원 <select id="fixedEmployee"></select></label><label>근태 <select id="fixedType"><option value="off">휴무</option><option value="annual">연차</option></select></label></div><div class="fixed-weekdays" id="fixedWeekdays"><label><input type="checkbox" value="0">일</label><label><input type="checkbox" value="1">월</label><label><input type="checkbox" value="2">화</label><label><input type="checkbox" value="3">수</label><label><input type="checkbox" value="4">목</label><label><input type="checkbox" value="5">금</label><label><input type="checkbox" value="6">토</label></div><div class="row"><button id="fixedPreviewBtn">미리보기</button><button id="fixedSave" class="primary">일괄 등록</button></div><div id="fixedPreview" class="fixed-preview muted">직원과 요일을 선택하면 등록 날짜와 인원 현황을 미리 볼 수 있습니다.</div><h3>이전에 일괄 등록한 고정 휴무</h3><div id="fixedBatches"></div></section><section id="adminShifts" class="hidden"><div class="admin-head"><div><h3>조별 설정</h3><p class="muted">변경사항은 저장 전까지 반영되지 않습니다.</p></div><button class="primary" id="saveShifts">저장</button></div><div id="shiftEditor"></div><div class="row"><button id="resetShifts">변경 취소</button><span id="shiftDirty" class="muted">저장된 상태</span></div></section><section id="unified_types" class="unified-pane hidden"><p class="muted">이미 사용한 유형은 삭제 대신 비활성화하여 기록을 보존합니다.</p><div id="typeEditor"></div><div class="row"><input id="newType" placeholder="새 근태 이름"><select id="newCategory"><option value="special">특이근태</option><option value="off">휴무자</option><option value="work">근무자</option></select><button id="addType">유형 추가</button></div></section><section id="unified_times" class="unified-pane hidden"><div id="shiftTimes"></div></section><section id="unified_staff" class="unified-pane hidden"><p class="muted">직원 이름 수정, 계정 추가, 인원 조정이 가능합니다. 지점장은 항상 맨 앞에 표시됩니다. 삭제한 직원의 과거 신청·확정 데이터는 보관됩니다.</p><div id="staffEditor"></div></section><section id="unified_managers" class="unified-pane hidden"><div id="managerEditor"></div></section></div><div class="footer">이 파일은 한 브라우저의 localStorage에만 저장하는 기능 검증용입니다. 직원의 휴무 신청은 공용 출근부에 임시 반영되며 관리자가 월별 최종 확정합니다. 여러 직원 간 실시간 공유, 비밀번호는 이 브라우저에만 저장되는 체험용 잠금장치이며 실제 로그인 보안·알림 기능은 없습니다. 날짜별 인원 계산은 설정한 근무시간과 확정된 근태를 기준으로 하는 단순 추정이며, 법정 휴게시간 및 실제 공휴일 판별은 미연동입니다.</div></div><nav class="bottomnav" aria-label="하단 메뉴"><button data-goto="calendar"><span class="navicon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></span>출근부</button><button data-goto="apply"><span class="navicon"><svg viewBox="0 0 24 24"><path d="M12 20h9M4 16l-1 5 5-1L20 8l-4-4L4 16z"/></svg></span>근태 신청</button><button data-goto="admin" class="adminOnly"><span class="navicon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8 12 3 3 5-6"/></svg></span>설정</button></nav><div id="toast"></div><script>
+const KEY='osan_schedule_v11_20261021';function dateStrNow(){let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}let staff=[{id:'a',name:'부점장',shift:'open'},{id:'b',name:'승현',shift:'open'},{id:'c',name:'지웅',shift:'short'},{id:'d',name:'병준',shift:'short'},{id:'e',name:'우석',shift:'close'},{id:'f',name:'기웅',shift:'close'},{id:'g',name:'기화',shift:'close'},{id:'h',name:'아름',shift:'close'},{id:'i',name:'형주',shift:'close'},{id:'j',name:'수정',shift:'close'},{id:'k',name:'수경',shift:'close'},{id:'m',name:'지점장',shift:'manager'},{id:'n',name:'옥화',shift:'instructor'}];staff.sort((a,b)=>a.id==='m'?-1:b.id==='m'?1:0);const defaults={types:[{id:'work',name:'출근',category:'work',active:true},{id:'off',name:'휴무',category:'off',active:true},{id:'annual',name:'연차',category:'off',active:true},{id:'am',name:'오전반휴',category:'work',active:true},{id:'pm',name:'오후반휴',category:'work',active:true},{id:'training',name:'교육',category:'special',active:true},{id:'expo',name:'박람회',category:'special',active:true},{id:'checkfull',name:'종합검진 공가',category:'special',active:true},{id:'checkhalf',name:'일반검진 공가',category:'special',active:true},{id:'public',name:'공가',category:'special',active:true}],requests:[],confirmed:{},notes:{'2026-11-14':'박람회 운영 준비'},overrides:{},managers:['m','a'],shifts:Object.fromEntries(staff.map(s=>[s.id,s.shift])),times:{open:{start:'09:00',end:'19:00'},short:{start:'09:00',end:'16:00'},close:{start:'10:00',end:'20:00'},manager:{start:'10:00',end:'20:00'},instructor:{start:'10:00',end:'20:00'}}};let state;try{state=JSON.parse(localStorage.getItem(KEY))||JSON.parse(localStorage.getItem('osan_schedule_v10_20261021'))||structuredClone(defaults)}catch{state=structuredClone(defaults)};if(Array.isArray(state.staffMembers)&&state.staffMembers.length){staff=state.staffMembers.map(x=>({...x}));}else{state.staffMembers=staff.map(x=>({...x}));}staff.sort((a,b)=>a.id==='m'?-1:b.id==='m'?1:0);
+// v52: 기존 브라우저에 저장된 근태 유형도 안전하게 갱신한다.
+state.types??=structuredClone(defaults.types);
+const v52Types={annual:['연차','off'],training:['교육','special'],expo:['박람회','special'],checkfull:['종합검진 공가','special'],checkhalf:['일반검진 공가','special']};
+for(const [id,[label,cat]] of Object.entries(v52Types)){let t=state.types.find(t=>t.id===id);if(t){t.category=cat;if(!t.name)t.name=label}else state.types.push({id,name:label,category:cat,active:true})}
+if(!state.types.some(t=>t.id==='public'))state.types.push({id:'public',name:'공가',category:'special',active:true});
+for(const p of staff){if(!state.shifts[p.id])state.shifts[p.id]=p.shift||'close';}state.shifts['n']='open'; if(!state.v42LeaveReset){state.requests=[];for(const [day,records] of Object.entries(state.confirmed||{})){for(const [id,entry] of Object.entries(records)){if(['off','annual'].includes(entry?.type))delete records[id]}if(!Object.keys(records).length)delete state.confirmed[day]}state.finalizedMonths={};state.v42LeaveReset=true;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn('저장 실패',e)}} if(state.overrides?.['2026-11-30']?.daily===9&&state.overrides['2026-11-30'].after16===9&&!(state.customMinimumDates||[]).includes('2026-11-30')){ /* 기존 사용자의 날짜별 저장값은 임의 변경하지 않음 */ } let adminPage='collect',calendarConfirmOpen=false,directYear=2026,directMonth=10,directDates=new Set(),shiftDraft=null,directDraft={},minYear=new Date().getFullYear(),minMonth=new Date().getMonth();let current='all',viewYear=new Date().getFullYear(),viewMonth=new Date().getMonth(),selected=dateStrNow(),tab='calendar',applyYear=new Date().getFullYear(),applyMonth=new Date().getMonth(),chosenDates=new Set(),projected=null;const $=id=>document.getElementById(id), esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const dateStr=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const name=id=>staff.find(s=>s.id===id)?.name||id;const type=id=>state.types.find(t=>t.id===id)||{name:id,category:'special'};let unlockedAccount=null;const isAdmin=()=>state.managers.includes(current)&&unlockedAccount===current;function demoHash(x){let h=2166136261;for(let i=0;i<x.length;i++){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}return String(h>>>0)}function unlockAdmin(){if(!state.managers.includes(current))return false;state.adminPasswords??={};if(!state.adminPasswords[current]){let p=prompt('관리자 비밀번호를 처음 설정합니다 (4자리 이상)');if(!p||p.length<4){toast('비밀번호 설정을 취소했습니다');return false}let check=prompt('비밀번호를 다시 입력하세요');if(check!==p){toast('비밀번호가 일치하지 않습니다');return false}state.adminPasswords[current]=demoHash(p);localStorage.setItem(KEY,JSON.stringify(state));}else{let p=prompt('관리자 비밀번호를 입력하세요');if(p===null||demoHash(p)!==state.adminPasswords[current]){toast('비밀번호가 올바르지 않습니다');return false}}unlockedAccount=current;return true}const save=()=>{localStorage.setItem(KEY,JSON.stringify(state));render()};let toastTimer;const toast=t=>{let e=$('toast');if(!e)return;clearTimeout(toastTimer);const fail=/오류|실패|부족|일치하지|입력하세요|취소했|올바르지|중복|선택하세요/.test(t);e.innerHTML='';const symbol=document.createElement('span');symbol.className='toast-symbol';symbol.textContent=fail?'!':'✓';const msg=document.createElement('span');msg.className='toast-message';msg.textContent=t;const close=document.createElement('button');close.type='button';close.className='toast-close';close.setAttribute('aria-label','알림 닫기');close.textContent='×';close.onclick=()=>{e.classList.remove('toast-visible');e.style.display='none'};e.append(symbol,msg,close);e.classList.toggle('toast-error',fail);e.style.display='flex';e.classList.add('toast-visible');toastTimer=setTimeout(()=>{e.classList.remove('toast-visible');e.style.display='none'},3600)};function assigned(id,date){return projected?.[date]?.[id]||state.confirmed[date]?.[id]||{type:'work'}}function monthKey(date){return String(date).slice(0,7)}
+function monthFinalized(date){return !!(state.finalizedMonths||{})[monthKey(date)]}
+function activeRequest(date,id){return state.requests.find(r=>r.date===date&&r.employee===id&&r.status==='신청')}
+function shownAttendance(date,id){const existing=state.confirmed[date]?.[id];if(monthFinalized(date))return existing||{type:'work'};const request=activeRequest(date,id);if(request&&(!existing||['work','off','annual'].includes(existing.type)))return {type:request.type,preview:true};return existing||{type:'work'}}
+function attendanceSuffix(id){const labels={annual:'연',training:'교',expo:'박',checkfull:'종합',checkhalf:'일반',public:'공',am:'전반휴',pm:'후반휴'};return labels[id]||type(id).name}
+function attendanceLabel(person,id){return person+(id==='work'||id==='off'?'':` (${attendanceSuffix(id)})`)}
+function category(id){return id==='annual'?'off':type(id).category}function minutes(t){let [h,m]=(t||'00:00').split(':').map(Number);return h*60+m}function workingIntervals(id,date){const sh=state.shifts[id];if(id==='m'||id==='n'||sh==='manager'||sh==='instructor')return [];const att=assigned(id,date).type;if(['off','annual','training','expo','checkfull','public'].includes(att))return [];let {start,end}=state.times[sh]||state.times.close;let dow=new Date(date+'T12:00:00').getDay();if(dow===0){start='10:00';end=sh==='short'?'17:00':'20:00'}let a=minutes(start),b=minutes(end);if(att==='am'){if(sh==='open'){a=minutes('14:00');b=minutes('19:00')}else if(sh==='close'){a=minutes('15:00');b=minutes('20:00')}else a=Math.max(a,b-300)}if(att==='pm'){if(sh==='open'){a=minutes('09:00');b=minutes('14:00')}else if(sh==='close'){a=minutes('10:00');b=minutes('15:00')}else b=Math.min(b,a+300)}if(att==='checkhalf'){b=Math.min(b,a+300)}return b>a?[[a,b]]:[]}function coverage(date,time){return staff.filter(s=>s.id!=='m'&&s.id!=='n'&&workingIntervals(s.id,date).some(([a,b])=>a<=time&&time<b)).length}function minRules(date){let d=new Date(date+'T12:00:00').getDay(),weekend=d===0||d===6;let o=state.overrides[date]||{};return {daily:o.daily??(weekend?8:6),after16:o.after16??(weekend?7:5),afterHour:weekend?17:16,openMonday:d===1?3:0}}function warnings(date){let r=minRules(date),errors=[];let available=staff.filter(s=>s.id!=='m'&&s.id!=='n'&&workingIntervals(s.id,date).length).length;if(r.daily&&available<r.daily)errors.push(`일일 근무 가능 ${available}/${r.daily}명`);for(let h=r.afterHour;h<(r.afterHour===16?19:20);h++){let n=coverage(date,h*60);if(n<r.after16)errors.push(`${h}시 ${n}/${r.after16}명`)}if(r.openMonday){let n=staff.filter(s=>s.id!=='m'&&s.id!=='n'&&['open','short'].includes(state.shifts[s.id])&&workingIntervals(s.id,date).length).length;if(n<3)errors.push(`월요일 오픈조 ${n}/3명`)}return errors}function group(date){let groups={work:[],off:[],special:[]};staff.forEach(s=>{let a=assigned(s.id,date),t=type(a.type),cat=category(a.type),label=attendanceLabel(s.name,a.type);groups[cat]?.push(label)});return groups}function forecast(date,extra=[]){const pending=monthFinalized(date)?[]:state.requests.filter(r=>r.date===date&&r.status==='신청');const map={};for(const r of pending)map[r.employee]={type:r.type};for(const r of extra)map[r.employee]={type:r.type};projected={[date]:map};const problems=warnings(date);const min=minRules(date);const onSite=staff.filter(s=>s.id!=='m'&&s.id!=='n'&&workingIntervals(s.id,date).length>0).length;projected=null;return {problems,onSite,min,pending:pending.length}}function requestRisk(date){let f=forecast(date);return f.problems.length>0}function applyCalendar(){let viewingAll=current==='all';$('applyTab').classList.toggle('apply-view-only',viewingAll);$('applyAccountNotice').classList.toggle('hidden',!viewingAll);let start=new Date(applyYear,applyMonth,1).getDay(),count=new Date(applyYear,applyMonth+1,0).getDate(),weeks=Math.ceil((start+count)/7);$('applyMonthLabel').textContent=`${applyYear}년 ${applyMonth+1}월`;let html=['일','월','화','수','목','금','토'].map(d=>`<div class="pickhead">${d}</div>`).join('');for(let i=0;i<weeks*7;i++){let dt=new Date(applyYear,applyMonth,1-start+i),d=dateStr(dt.getFullYear(),dt.getMonth(),dt.getDate()),other=dt.getMonth()!==applyMonth,risk=requestRisk(d),selected=chosenDates.has(d),mine=state.requests.some(r=>r.employee===current&&r.date===d&&r.status==='신청');html+=`<button class="pickday ${other?'adjacent':''} ${selected?'chosen':''}" data-pick="${d}" aria-pressed="${selected}" title="${d}"><b>${other?dt.getMonth()+1+'월 ':''}${dt.getDate()}일</b>${risk?'<span class="dot redflag">● 인원주의</span>':mine?'<span class="dot">내 신청 ✓</span>':''}</button>`} $('applyCalendar').innerHTML=html;document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(viewingAll)return;let d=b.dataset.pick;let mine=state.requests.find(r=>r.employee===current&&r.date===d&&r.status==='신청');if(monthFinalized(d))return toast('최종 확정된 날짜입니다. 관리자에게 변경을 요청하세요');if(mine){if(confirm(`${d} ${type(mine.type).name} 신청을 취소할까요?`)){mine.status='취소';save();toast('신청을 취소했습니다')}return}chosenDates.has(d)?chosenDates.delete(d):chosenDates.add(d);applyCalendar()});$('selectedCount').textContent=`선택 ${chosenDates.size}일`;let typeId=$('applyType').value;let problems=viewingAll?[]:[...chosenDates].sort().map(d=>({d,...forecast(d,[{employee:current,type:typeId}])})).filter(x=>x.problems.length);$('applyRisk').innerHTML=problems.length?`<div class="risknote"><b>🔴 최소 근무인원 확인 필요: ${problems.length}일</b><div>${problems.map(x=>`${x.d} (${esc(x.problems.join(', '))})`).join('<br>')}</div><small>경고가 있어도 신청은 접수됩니다. 관리자가 오프라인에서 조정합니다.</small></div>`:'';$('applyBtn').disabled=viewingAll||chosenDates.size===0;let mine=state.requests.filter(r=>!viewingAll&&r.employee===current&&r.status==='신청').sort((a,b)=>a.date.localeCompare(b.date));$('myRequests').innerHTML='<h3>내 신청 내역 · '+mine.length+'일</h3>'+(mine.map(r=>`<div class="request"><b>${r.date}</b> ${esc(attendanceSuffix(r.type))} <button data-cancel="${r.id}">신청 취소</button></div>`).join('')||'<p class="muted">신청한 날짜가 없습니다.</p>');document.querySelectorAll('[data-cancel]').forEach(e=>e.onclick=()=>{let r=state.requests.find(x=>x.id===e.dataset.cancel);if(r&&monthFinalized(r.date))return toast('최종 확정된 날짜입니다. 관리자에게 변경을 요청하세요');if(!confirm('이 휴무 신청을 취소할까요?'))return;if(r&&r.employee===current&&r.status==='신청'){r.status='취소';save();toast('신청 취소 완료')}})}
+function rank(s){return s.id==='m'?-100:s.id==='a'?-90:s.id==='n'?100:staff.findIndex(x=>x.id===s.id)}
+function groupsByShift(date){let out={open:[],close:[],off:[],special:[]};for(const person of [...staff].sort((a,b)=>rank(a)-rank(b))){const a=shownAttendance(date,person.id),t=type(a.type),cat=t.category||'special';const label=attendanceLabel(person.name,a.type);if(cat==='off'){out.off.push(label);continue}if(cat==='special'){out.special.push(label);continue}const sh=state.shifts[person.id];if(sh==='close')out.close.push(label);else out.open.push(label)}return out}
+const PUBLIC_HOLIDAYS_2026=new Set(['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-06','2026-08-15','2026-08-17','2026-09-24','2026-09-25','2026-09-26','2026-10-03','2026-10-05','2026-10-09','2026-12-25']);
+function calendarHoliday(date){return PUBLIC_HOLIDAYS_2026.has(date)||/공휴일|대체휴일/.test(state.notes[date]||'')}
+function calendar(){
+ $('jumpYear').value=viewYear;$('jumpMonth').value=viewMonth;
+ const start=new Date(viewYear,viewMonth,1).getDay(),count=new Date(viewYear,viewMonth+1,0).getDate(),weeks=Math.ceil((start+count)/7);
+ let html=['일','월','화','수','목','금','토'].map((w,i)=>`<div class="weekday ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('');
+ for(let i=0;i<weeks*7;i++){
+  const dt=new Date(viewYear,viewMonth,1-start+i),date=dateStr(dt.getFullYear(),dt.getMonth(),dt.getDate()),g=groupsByShift(date),other=dt.getMonth()!==viewMonth,w=warnings(date),risk=forecast(date),weekday=dt.getDay(),holiday=calendarHoliday(date);
+  const sec=(label,key)=>`<div class="schedule-section"><span class="schedule-label">${label}</span><div class="schedule-names">${esc(g[key].join(' ')||'—')}</div></div>`;
+  html+=`<div class="day ${other?'other':''} ${selected===date?'selected':''} ${risk.pending&&risk.problems.length?'risk':''} ${holiday||weekday===0?'is-sunday':weekday===6?'is-saturday':''}" data-date="${date}">
+   <div class="date">${other?dt.getMonth()+1+'월 ':''}${dt.getDate()}일${holiday?'<span class="holiday-dot" title="공휴일">●</span>':''}${monthFinalized(date)?'<span class="final-tag">확정</span>':risk.pending?'<span class="draft-tag">신청 중</span>':''}</div>
+   <div class="schedule-heading">근무</div><div class="shift-split shift-two-columns"><div class="shift-open">${sec('오픈','open')}</div><div class="shift-close">${sec('마감','close')}</div></div><div class="compact-extras">
+   ${sec('휴무','off')}${sec('특이근태','special')}</div>
+   <div class="calendar-memo">${state.notes[date]?`<span class="memo-text">${esc(state.notes[date])}</span>`:''}${isAdmin()?`<button type="button" class="memo-edit" data-memo-date="${date}" title="특이사항 메모 수정">${state.notes[date]?'수정':'+ 메모'}</button>`:''}</div>
+   ${risk.problems.length?`<div class="warning">● 인원주의 · ${esc(risk.problems[0])}</div>`:''}
+  </div>`;
+ }
+ $('calendar').innerHTML=html;$('monthLabel').textContent=`${viewYear}년 ${viewMonth+1}월`;
+ document.querySelectorAll('#calendar .day').forEach(e=>e.onclick=()=>{selected=e.dataset.date;render()});document.querySelectorAll('[data-memo-date]').forEach(e=>e.onclick=ev=>{ev.stopPropagation();if(!isAdmin())return;const d=e.dataset.memoDate;const v=prompt(d+' 특이사항 (교육, 박람회 등 · 최대 40자)',state.notes[d]||'');if(v===null)return;const val=v.trim().slice(0,40);if(val)state.notes[d]=val;else delete state.notes[d];save();toast('특이사항이 모든 달력에 반영되었습니다')});
+}
+function details(){if(!$('dayDetails'))return;let g=groupsByShift(selected),r=minRules(selected),w=warnings(selected);$('dayDetails').innerHTML=`<h2>${selected} 상세</h2><div class="stack"><div><b>근무자 · 오픈</b><p>${esc(g.open.join(' ')||'-')}</p></div><div><b>근무자 · 마감</b><p>${esc(g.close.join(' ')||'-')}</p></div><div><b>휴무자</b><p>${esc(g.off.join(' ')||'-')}</p></div><div><b>특이근태</b><p>${esc(g.special.join(' ')||'-')}</p></div><div class="${w.length?'bad':'good'}">${w.length?'⚠ '+esc(w.join(' / ')):'✓ 설정된 인원 기준 충족 (추정)'}</div>${isAdmin()?`<label>일자별 특이사항<textarea id="dayNote">${esc(state.notes[selected]||'')}</textarea></label><label>일일 최소 인원 (0=미설정)<input type="number" min="0" max="11" id="dailyMin" value="${r.daily}"></label><label>${r.afterHour}시 이후 최소 인원<input type="number" min="0" max="11" id="afterMin" value="${r.after16}"></label><button class="primary" id="saveDay">일자 설정 저장</button><small>관리자가 교육·박람회 참석자를 지정하려면 '관리자 관리 → 직원 근태 직접 확정'을 사용하세요.</small>`:`<small>특이사항: ${esc(state.notes[selected]||'없음')}</small>`}</div>`;if(isAdmin())$('saveDay').onclick=()=>{state.notes[selected]=$('dayNote').value;state.overrides[selected]={daily:+$('dailyMin').value,after16:+$('afterMin').value};save();toast('일자 설정 저장 완료')}}function selectOptions(arr,sel){return arr.map(x=>`<option value="${esc(x.id)}" ${sel===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}function fillSelectors(){let me=staff.find(s=>s.id===current),allowed=state.types.filter(t=>t.active&&['off','annual','am','pm','public','checkfull','checkhalf'].includes(t.id)&&(!['am','pm'].includes(t.id)||!['short','manager','instructor'].includes(state.shifts[current])));$('applyType').innerHTML=selectOptions(allowed);$('directEmployee').innerHTML=selectOptions(staff);$('directType').innerHTML=selectOptions(state.types.filter(t=>t.active&&t.id!=='work'));$('specialEmployee').innerHTML=selectOptions(staff);$('specialType').innerHTML=selectOptions(state.types.filter(t=>t.active&&(t.category==='special'||t.id==='off'||t.id==='annual'||t.id==='am'||t.id==='pm')));$('role').textContent=isAdmin()?'관리자 인증됨':current==='all'?'전체 열람':'일반 직원';document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',!isAdmin()));if(!isAdmin()&&tab==='admin')tab='calendar'}let requestYear=new Date().getFullYear(),requestMonth=new Date().getMonth();
+function requestCalendar(){let start=new Date(requestYear,requestMonth,1).getDay(),count=new Date(requestYear,requestMonth+1,0).getDate(),weeks=Math.ceil((start+count)/7);$('reqMonthLabel').textContent=`${requestYear}년 ${requestMonth+1}월`;let html=['일','월','화','수','목','금','토'].map(w=>`<div class="weekday">${w}</div>`).join('');for(let i=0;i<weeks*7;i++){let dt=new Date(requestYear,requestMonth,1-start+i),d=dateStr(dt.getFullYear(),dt.getMonth(),dt.getDate()),other=dt.getMonth()!==requestMonth,items=state.requests.filter(r=>r.date===d&&['신청','확정'].includes(r.status)),risk=items.some(r=>r.status==='신청')&&requestRisk(d);html+=`<div class="day ${other?'other':''} ${risk?'risk':''}"><div class="date">${other?dt.getMonth()+1+'월 ':''}${dt.getDate()}일 ${risk?'🔴':''}</div><div class="req-day-list">${state.notes[d]?`<div class="shared-memo">${esc(state.notes[d])}</div>`:''}${items.map(r=>`<div class="req-person"><b>${esc(name(r.employee))}</b> (${esc(attendanceSuffix(r.type))})${r.status==='확정'?' ✓확정':''}</div>`).join('')||'<span class="muted">-</span>'}</div></div>`}$('requestCalendar').innerHTML=html}
+function minimumEditor(){
+  if(!$('minimumEditor'))return;
+  $('minMonthLabel').textContent=`${minYear}년 ${minMonth+1}월`;
+  const last=new Date(minYear,minMonth+1,0).getDate();
+  let rows='';
+  for(let day=1;day<=last;day++){
+    const d=dateStr(minYear,minMonth,day),r=minRules(d),weekday=['일','월','화','수','목','금','토'][new Date(d+'T12:00:00').getDay()];
+    rows+=`<tr><td class="min-date">${day}일 (${weekday})</td><td><input type="number" inputmode="numeric" min="0" max="11" data-min-day="${d}" value="${r.daily}" aria-label="${d} 최소 인원"></td><td><input type="number" inputmode="numeric" min="0" max="11" data-min-after="${d}" value="${r.after16}" aria-label="${d} ${r.afterHour}시 이후 최소 인원"></td></tr>`;
+  }
+  $('minimumEditor').innerHTML=`<div class="min-table-wrap"><table class="min-table"><thead><tr><th>날짜</th><th>최소 인원</th><th>시간대별 최소</th></tr></thead><tbody>${rows}</tbody></table></div><button class="primary wide-action" id="minimumSave">이 달 최소 인원 일괄 저장</button><p class="muted">날짜별로 필요한 인원을 입력한 뒤 아래 저장 버튼을 누르세요. 빈칸은 0으로 처리됩니다.</p>`;
+  $('minimumSave').onclick=()=>{
+    const inputs=[...document.querySelectorAll('[data-min-day]')];
+    for(const el of inputs){const d=el.dataset.minDay,after=document.querySelector(`[data-min-after="${d}"]`);const daily=Math.max(0,Math.min(11,Number(el.value)||0)),after16=Math.max(0,Math.min(11,Number(after.value)||0));state.overrides[d]={daily,after16};}
+    save();toast(`${minYear}년 ${minMonth+1}월 최소 인원 ${inputs.length}일 저장 완료`);
+  };
+}
+function pendingAdminList(){
+ const target=$('pendingAdminList');if(!target)return;
+ // Show both pending requests and confirmed leave, including monthly fixed-leave batches.
+ const monthPrefix=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+ const pending=state.requests.filter(r=>r.status==='신청'&&r.date.startsWith(monthPrefix));
+ const confirmedDates=Object.keys(state.confirmed||{}).filter(d=>d.startsWith(monthPrefix)&&Object.values(state.confirmed[d]||{}).some(v=>v&&v.type!=='work'));
+ const saturdays=Array.from({length:new Date(viewYear,viewMonth+1,0).getDate()},(_,i)=>dateStr(viewYear,viewMonth,i+1)).filter(d=>new Date(d+'T12:00:00').getDay()===6);
+ const dates=[...new Set([...pending.map(r=>r.date),...confirmedDates,...saturdays])].sort();
+ if(!dates.length){target.innerHTML='<p class="muted">이달 등록된 휴무·특이근태 및 신청 내역이 없습니다.</p>';return}
+ const groupNames=ids=>ids.map(id=>esc(name(id))).join(' ')||'<span class="muted">없음</span>';
+ target.innerHTML=dates.map(d=>{
+   const requests=pending.filter(r=>r.date===d),pendingMap=new Map(requests.map(r=>[r.employee,r]));
+   const groups={open:[],short:[],close:[],off:[],special:[]};
+   for(const person of staff){
+     if(person.id==='m'||person.id==='n')continue;
+     const request=pendingMap.get(person.id);
+     const confirmed=state.confirmed[d]?.[person.id];
+     const attendance=request?.type||confirmed?.type||'work';
+     const attendanceCategory=category(attendance);
+     if(attendanceCategory==='off'||attendanceCategory==='special'){
+       (attendanceCategory==='off'?groups.off:groups.special).push({id:person.id,kind:attendance,pending:!!request,fixed:!!confirmed?.fixedBatch});continue;
+     }
+     const shift=state.shifts[person.id]||person.shift;
+     const bucket=shift==='short'?'short':shift==='open'||shift==='manager'||shift==='instructor'?'open':'close';
+     groups[bucket].push(person.id);
+   }
+   const groupText=items=>items.map(p=>`${esc(attendanceLabel(name(p.id),p.kind))}${p.pending?' · 신청 중':''}`).join(' ')||'<span class="muted">없음</span>';const offText=groupText(groups.off);const specialText=groupText(groups.special);
+   const risk=forecast(d).problems.length>0;
+   const dayNo=new Date(d+'T12:00:00').getDay(),dayLabel=['일','월','화','수','목','금','토'][dayNo];
+   const isHoliday=calendarHoliday(d);
+   const dateColor=dayNo===0||isHoliday?'#d95353':dayNo===6?'#2875cb':'#535b64';
+   const prettyDate=d.replace(/^(\d{4})-(\d{2})-(\d{2})$/,(_,y,m,day)=>`${y}년 ${Number(m)}월 ${Number(day)}일`);
+   return `<div class="request admin-staff-summary ${risk?'risknote':''}"><div class="admin-staff-date"><strong style="color:${dateColor}">${prettyDate} (${dayLabel})</strong>${risk?'<span class="admin-risk-label">인원주의</span>':''}</div><div class="admin-staff-groups"><div class="admin-staff-group"><span>단축</span><div>${groupNames(groups.short)}</div></div><div class="admin-staff-group"><span>오픈</span><div>${groupNames(groups.open)}</div></div><div class="admin-staff-group"><span>마감</span><div>${groupNames(groups.close)}</div></div><div class="admin-staff-group off"><span>휴무자</span><div>${offText}</div></div><div class="admin-staff-group"><span>특이근태</span><div>${specialText}</div></div></div></div>`;
+ }).join('');
+}
+function requests(){requestCalendar();pendingAdminList();minimumEditor();let dates=[...new Set(state.requests.filter(r=>r.status==='신청').map(r=>r.date))].sort();let bad=dates.filter(d=>requestRisk(d));$('adminRequests').innerHTML=bad.length?bad.map(d=>`<div class="request risknote"><b>🔴 ${d}</b> · ${esc(forecast(d).problems.join(' / '))}<p>${state.requests.filter(r=>r.date===d&&r.status==='신청').map(r=>esc(name(r.employee))+' ('+esc(type(r.type).name)+')').join(', ')}</p></div>`).join(''):'현재 신청 기준 최소 근무인원 부족 예상 날짜가 없습니다.'}
+function shiftEditor(){if(!shiftDraft)shiftDraft={...state.shifts};const opts=[['open','오픈조 일반'],['short','오픈조 단축'],['close','마감조']];$('shiftEditor').innerHTML=`<div class="shift-bulk"><b>직원 여러 명 일괄 배정</b><p class="muted">직원 체크 후 근무조를 선택하세요. 우측 상단 저장을 눌러야 적용됩니다.</p><div class="bulk-people">${staff.filter(s=>!['m','n'].includes(s.id)).map(s=>`<label><input type="checkbox" data-bulk="${s.id}"><span>${esc(s.name)}</span></label>`).join('')}</div><div class="row"><button id="bulkOpen">오픈조 지정</button><button id="bulkShort">단축근무 지정</button><button id="bulkClose">마감조 지정</button></div></div><div class="shift-list">${staff.map(s=>`<div class="shift-person"><b>${esc(s.name)}</b>${['m','n'].includes(s.id)?`<span class="muted">${s.id==='m'?'지점장':'강사'} · 고정</span>`:`<select data-shift="${s.id}">${opts.map(([id,n])=>`<option value="${id}" ${shiftDraft[s.id]===id?'selected':''}>${n}</option>`).join('')}</select>`}</div>`).join('')}</div>`;for(const [btn,sh] of [['bulkOpen','open'],['bulkShort','short'],['bulkClose','close']])$(btn).onclick=()=>{let ids=[...document.querySelectorAll('[data-bulk]:checked')].map(x=>x.dataset.bulk);if(!ids.length)return toast('직원을 먼저 선택하세요');ids.forEach(id=>shiftDraft[id]=sh);shiftEditor();markShiftDirty()};document.querySelectorAll('[data-shift]').forEach(e=>e.onchange=()=>{shiftDraft[e.dataset.shift]=e.value;markShiftDirty()});markShiftDirty()}function markShiftDirty(){const dirty=JSON.stringify(shiftDraft)!==JSON.stringify(state.shifts);$('shiftDirty').textContent=dirty?'● 저장하지 않은 변경사항':'저장된 상태';$('saveShifts').disabled=!dirty}function directCalendar(){let start=new Date(directYear,directMonth,1).getDay(),count=new Date(directYear,directMonth+1,0).getDate(),weeks=Math.ceil((start+count)/7);$('directMonthLabel').textContent=`${directYear}년 ${directMonth+1}월`;let html=['일','월','화','수','목','금','토'].map(d=>`<div class="pickhead">${d}</div>`).join('');for(let i=0;i<weeks*7;i++){let dt=new Date(directYear,directMonth,1-start+i),d=dateStr(dt.getFullYear(),dt.getMonth(),dt.getDate()),other=dt.getMonth()!==directMonth,chosen=directDates.has(d),risk=requestRisk(d);html+=`<button class="pickday ${other?'adjacent':''} ${chosen?'chosen':''}" data-direct-pick="${d}" aria-pressed="${chosen}"><b>${other?dt.getMonth()+1+'월 ':''}${dt.getDate()}일</b>${risk?'<span class="dot redflag">● 인원주의</span>':''}${state.notes[d]?`<span class="shared-memo">${esc(state.notes[d])}</span>`:''}</button>`}$('directCalendar').innerHTML=html;document.querySelectorAll('[data-direct-pick]').forEach(e=>e.onclick=()=>{let d=e.dataset.directPick;directDates.has(d)?directDates.delete(d):directDates.add(d);directCalendar()});$('directCount').textContent=`선택 ${directDates.size}일`;$('directSave').disabled=!directDates.size;let e=$('directEmployee').value,t=$('directType').value;let bad=[...directDates].sort().map(d=>({d,errors:forecast(d,[{employee:e,type:t}]).problems})).filter(x=>x.errors.length);$('directRisk').innerHTML=bad.length?`<div class="risknote">🔴 확인 필요 ${bad.length}일<br>${bad.map(x=>`${x.d}: ${esc(x.errors.join(', '))}`).join('<br>')}</div>`:''}function updateDirectDraft(){const count=Object.values(directDraft).reduce((n,v)=>n+Object.keys(v).length,0);$('draftStatus').textContent=count?`임시 등록 ${count}건 · 우측 상단 확정을 눌러야 공용 출근부에 반영됩니다.`:'공용 출근부에 반영할 변경사항이 없습니다.';$('publishDirect').disabled=!count}function removeConfirmedRecords(items){
+ if(!isAdmin())return toast('관리자 권한이 필요합니다');
+ const valid=items.filter(({date,employee})=>state.confirmed[date]?.[employee]&&state.confirmed[date][employee].type!=='work');
+ if(!valid.length)return toast('삭제할 확정 근태가 없습니다');
+ const message=valid.length===1?`${valid[0].date} · ${name(valid[0].employee)} · ${type(state.confirmed[valid[0].date][valid[0].employee].type).name} 확정을 삭제할까요?`:`선택한 확정 근태 ${valid.length}건을 일괄 삭제할까요?`;
+ if(!confirm(message+'\n삭제 즉시 공용 출근부에 반영됩니다.'))return;
+ for(const {date,employee} of valid){
+  delete state.confirmed[date][employee];
+  if(!Object.keys(state.confirmed[date]).length)delete state.confirmed[date];
+  for(const req of state.requests){if(req.date===date&&req.employee===employee&&req.status==='확정'){req.status='취소';req.cancelledAt=new Date().toISOString();req.cancelledBy=current;}}
+ }
+ save();specialDeleteList();toast(`확정 근태 ${valid.length}건 삭제 완료`);
+}
+function specialDeleteList(){
+ const root=$('specialDeleteList');if(!root)return;
+ const employee=$('specialEmployee').value,month=$('specialMonth').value;
+ const entries=Object.entries(state.confirmed||{}).filter(([d,people])=>d.startsWith(month+'-')&&people?.[employee]&&people[employee].type!=='work').sort(([a],[b])=>a.localeCompare(b));
+ root.innerHTML=entries.length?`<div class="confirmed-actions"><label><input type="checkbox" id="specialDeleteAll"> 전체 선택</label><button type="button" id="specialDeleteBulk" class="confirmed-bulk-delete" disabled>선택 삭제 (0건)</button></div><div class="confirmed-list">${entries.map(([date,people])=>`<div class="confirmed-item"><input type="checkbox" data-special-delete="${date}" aria-label="${esc(date)} 선택"><span>${esc(date.slice(5))} · ${esc(name(employee))} · ${esc(type(people[employee].type).name)}</span><button type="button" class="confirmed-delete" data-special-delete-one="${date}">삭제</button></div>`).join('')}</div>`:'<p class="muted">이 직원의 선택 월 등록 근태가 없습니다.</p>';
+ if(!entries.length)return;
+ const checks=[...root.querySelectorAll('[data-special-delete]')],all=root.querySelector('#specialDeleteAll'),bulk=root.querySelector('#specialDeleteBulk');
+ const update=()=>{const n=checks.filter(c=>c.checked).length;bulk.disabled=!n;bulk.textContent=`선택 삭제 (${n}건)`;all.checked=n===checks.length;all.indeterminate=n>0&&n<checks.length};
+ all.onchange=()=>{checks.forEach(c=>c.checked=all.checked);update()};checks.forEach(c=>c.onchange=update);
+ bulk.onclick=()=>removeConfirmedRecords(checks.filter(c=>c.checked).map(c=>({date:c.dataset.specialDelete,employee})));
+ root.querySelectorAll('[data-special-delete-one]').forEach(b=>b.onclick=()=>removeConfirmedRecords([{date:b.dataset.specialDeleteOne,employee}]));
+}
+let confirmedViewFilter='all';
+function confirmedManage(){
+ const root=$('confirmedManageList');if(!root)return;
+ const prefix=directYear+'-'+String(directMonth+1).padStart(2,'0')+'-';
+ const entries=[];
+ for(const [date,people] of Object.entries(state.confirmed||{})){
+  if(!date.startsWith(prefix))continue;
+  for(const [employee,entry] of Object.entries(people||{})){
+   if(!staff.some(s=>s.id===employee))continue;
+   if(!entry||!entry.type||entry.type==='work')continue;
+   entries.push({date,employee,entry});
+  }
+ }
+ entries.sort((a,b)=>a.date.localeCompare(b.date)||rank(staff.find(s=>s.id===a.employee))-rank(staff.find(s=>s.id===b.employee)));
+ const filters=[['all','전체'],['off','휴무만 보기'],['special','특이근태만 보기']];
+ const shown=entries.filter(({entry})=>confirmedViewFilter==='all'||type(entry.type).category===confirmedViewFilter);
+ root.innerHTML=`<div class="confirmed-filters" role="group" aria-label="확정 근태 유형 필터">${filters.map(([id,label])=>`<button type="button" class="confirmed-filter ${confirmedViewFilter===id?'active':''}" data-confirmed-filter="${id}" aria-pressed="${confirmedViewFilter===id}">${label} (${id==='all'?entries.length:entries.filter(x=>type(x.entry.type).category===id).length})</button>`).join('')}</div>${shown.length?`<div class="confirmed-actions"><label><input type="checkbox" id="confirmedSelectAll" class="confirmed-select"> 현재 목록 전체 선택</label><button type="button" id="confirmedBulkDelete" class="confirmed-bulk-delete" disabled>선택 삭제 (0건)</button></div><div class="confirmed-list">${shown.map(({date,employee,entry})=>`<div class="confirmed-item"><input type="checkbox" class="confirmed-select" data-confirmed-check data-confirmed-date="${date}" data-confirmed-employee="${employee}" aria-label="${esc(date)} ${esc(name(employee))} 선택"><span>${esc(date.slice(5))} · ${esc(name(employee))} · ${esc(type(entry.type).name)}</span><button type="button" class="confirmed-delete" data-delete-date="${date}" data-delete-employee="${employee}">삭제</button></div>`).join('')}</div>`:'<p class="confirmed-empty">선택한 유형의 확정 근태가 없습니다.</p>'}`;
+ root.querySelectorAll('[data-confirmed-filter]').forEach(btn=>btn.onclick=()=>{confirmedViewFilter=btn.dataset.confirmedFilter;confirmedManage()});
+ if(!shown.length)return;
+ const checks=[...root.querySelectorAll('[data-confirmed-check]')],all=root.querySelector('#confirmedSelectAll'),bulk=root.querySelector('#confirmedBulkDelete');
+ function updateSelection(){const selected=checks.filter(c=>c.checked).length;bulk.disabled=!selected;bulk.textContent=`선택 삭제 (${selected}건)`;all.checked=selected===checks.length;all.indeterminate=selected>0&&selected<checks.length;}
+ all.onchange=()=>{checks.forEach(c=>c.checked=all.checked);updateSelection()};
+ checks.forEach(c=>c.onchange=updateSelection);
+ bulk.onclick=()=>removeConfirmedRecords(checks.filter(c=>c.checked).map(c=>({date:c.dataset.confirmedDate,employee:c.dataset.confirmedEmployee})));
+ root.querySelectorAll('[data-delete-date]').forEach(btn=>btn.onclick=()=>removeConfirmedRecords([{date:btn.dataset.deleteDate,employee:btn.dataset.deleteEmployee}]));
+}
+
+function fixedSelectedDates(){
+ const month=$('fixedMonth').value,days=[...document.querySelectorAll('#fixedWeekdays input:checked')].map(x=>Number(x.value));
+ if(!/^\d{4}-\d{2}$/.test(month)||!days.length)return [];
+ const [y,m]=month.split('-').map(Number),last=new Date(y,m,0).getDate(),out=[];
+ for(let i=1;i<=last;i++){const d=dateStr(y,m-1,i);if(days.includes(new Date(d+'T12:00:00').getDay()))out.push(d)}
+ return out;
+}
+function fixedConflicts(employee,dates){return dates.filter(d=>!!state.confirmed[d]?.[employee]||state.requests.some(r=>r.date===d&&r.employee===employee&&['신청','확정'].includes(r.status)))}
+function fixedPreview(){
+ const e=$('fixedEmployee').value,dates=fixedSelectedDates(),el=$('fixedPreview');
+ if(!e||!dates.length){el.textContent='직원과 휴무 요일을 선택하세요.';return}
+ const conflicts=fixedConflicts(e,dates),available=dates.filter(d=>!conflicts.includes(d));
+ const lines=available.map(d=>{const f=forecast(d,[{employee:e,type:$('fixedType').value}]);return `<div class="${f.problems.length?'fixed-warning':''}">${d} (${['일','월','화','수','목','금','토'][new Date(d+'T12:00:00').getDay()]}) · 예상 출근 ${f.onSite}명${f.problems.length?' · '+esc(f.problems.join(' / ')):' · 정상'}</div>`});
+ el.innerHTML=`<b>${esc(name(e))} · 등록 가능 ${available.length}일 / 기존 근태 중복 ${conflicts.length}일</b>${conflicts.length?`<p class="muted">중복 제외: ${conflicts.join(', ')}</p>`:''}${lines.join('')||'<p>등록할 날짜가 없습니다.</p>'}`;
+}
+function fixedBatches(){
+ const el=$('fixedBatches');if(!el)return;
+ const batches=state.fixedLeaveBatches||[];
+ el.innerHTML=batches.length?batches.slice().reverse().map(b=>{const live=b.dates.filter(d=>state.confirmed[d]?.[b.employee]?.fixedBatch===b.id);return `<div class="fixed-batch"><span><b>${esc(b.month)} · ${esc(name(b.employee))}</b><br><small>${esc(b.days.map(x=>['일','월','화','수','목','금','토'][x]).join('·'))}요일 · 현재 ${live.length}일 등록</small></span><button data-remove-fixed="${esc(b.id)}" ${live.length?'':'disabled'}>이 일괄 등록 삭제</button></div>`}).join(''):'<p class="muted">일괄 등록 내역이 없습니다.</p>';
+ el.querySelectorAll('[data-remove-fixed]').forEach(btn=>btn.onclick=()=>{
+  if(!isAdmin())return toast('관리자만 삭제할 수 있습니다');const b=(state.fixedLeaveBatches||[]).find(x=>x.id===btn.dataset.removeFixed);if(!b)return;
+  const live=b.dates.filter(d=>state.confirmed[d]?.[b.employee]?.fixedBatch===b.id);
+  if(!confirm(`${name(b.employee)}의 ${b.month} 고정 휴무 ${live.length}건을 삭제할까요?\n다른 방식으로 변경된 근태는 삭제하지 않습니다.`))return;
+  for(const d of live){delete state.confirmed[d][b.employee];if(!Object.keys(state.confirmed[d]).length)delete state.confirmed[d]}
+  state.fixedLeaveBatches=state.fixedLeaveBatches.filter(x=>x.id!==b.id);save();fixedEditor();specialDeleteList();toast(`${live.length}건 삭제 · 기본 출근으로 복귀`)
+ });
+}
+function fixedEditor(){
+ const e=$('fixedEmployee');if(!e)return;
+ const old=e.value;e.innerHTML=selectOptions(staff,'m');e.value=staff.some(s=>s.id===old)?old:'g';
+ if(!$('fixedMonth').value)$('fixedMonth').value=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+ fixedBatches();fixedPreview();
+}
+function adminMenu(){document.querySelectorAll('[data-admin-page]').forEach(e=>e.classList.toggle('active',e.dataset.adminPage===adminPage));for(const [p,id] of [['collect','adminCollect'],['shifts','adminShifts'],['fixed','adminFixed']])$(id).classList.toggle('hidden',adminPage!==p);for(const p of ['types','times','staff','managers'])$('unified_'+p).classList.toggle('hidden',adminPage!==p);if(adminPage==='collect')requests();if(adminPage==='shifts')shiftEditor();if(adminPage==='fixed')fixedEditor();settings();}
+function staffEditor(){
+ const el=$('staffEditor');if(!el)return;
+ el.innerHTML=`<p><b>현재 등록 ${staff.length}명</b> · 지점장 포함</p><div class="staff-editor-list">${staff.map(s=>`<div class="staff-editor-row"><span>${s.id==='m'?'★ ':''}${esc(s.name)}</span><input type="text" maxlength="24" aria-label="${esc(s.name)} 이름" data-staff-name="${s.id}" value="${esc(s.name)}"><button type="button" data-staff-remove="${s.id}" ${s.id==='m'?'disabled':''}>삭제</button></div>`).join('')}</div><div class="row"><button type="button" id="saveStaffNames" class="primary">이름 변경 저장</button></div><div class="staff-add"><label>새 직원 이름 <input type="text" id="addStaffName" maxlength="24" placeholder="직원 이름"></label><label>기본 근무조 <select id="addStaffShift"><option value="close">마감조</option><option value="open">오픈조</option><option value="short">오픈조 단축</option><option value="instructor">강사</option></select></label><button type="button" id="addStaffBtn" class="primary">직원 추가</button></div><small class="muted">직원 삭제 시 기존 기록은 보존되지만 현재 달력과 인원 계산에서는 제외됩니다. 이름 변경은 기존 기록에도 같은 계정으로 연결됩니다.</small>`;
+ $('saveStaffNames').onclick=()=>{const names=staff.map(s=>({id:s.id,name:document.querySelector(`[data-staff-name="${s.id}"]`).value.trim()}));if(names.some(x=>!x.name))return toast('이름을 모두 입력하세요');if(new Set(names.map(x=>x.name)).size!==names.length)return toast('직원 이름이 중복됩니다');names.forEach(x=>staff.find(s=>s.id===x.id).name=x.name);state.staffMembers=staff.map(x=>({...x}));save();toast('직원 이름을 저장했습니다')};
+ document.querySelectorAll('[data-staff-remove]').forEach(b=>b.onclick=()=>{const id=b.dataset.staffRemove,p=staff.find(s=>s.id===id);if(!p||id==='m')return;if(!confirm(`${p.name} 계정을 등록 인원에서 제외할까요?\n기존 신청 및 확정 기록은 보관됩니다.`))return;state.staffArchive??=[];state.staffArchive.push({...p,removedAt:new Date().toISOString()});staff=staff.filter(s=>s.id!==id);state.staffMembers=staff.map(x=>({...x}));state.managers=state.managers.filter(x=>x!==id);if(current===id){current='m';unlockedAccount=null}shiftDraft=null;save();toast('등록 인원을 변경했습니다')});
+ $('addStaffBtn').onclick=()=>{const n=$('addStaffName').value.trim(),sh=$('addStaffShift').value;if(!n)return toast('이름을 입력하세요');if(staff.some(s=>s.name===n))return toast('동일한 이름이 있습니다');let id='u'+Date.now().toString(36);while(staff.some(s=>s.id===id))id+='x';staff.push({id,name:n,shift:sh});state.shifts[id]=sh;state.staffMembers=staff.map(x=>({...x}));shiftDraft=null;save();toast(`${n} 직원 추가 완료 · 총 ${staff.length}명`)};
+}
+function settings(){ staffEditor();$('typeEditor').innerHTML=`<table><tr><th>근태 이름</th><th>표시 구분</th><th>사용</th></tr>${state.types.map(t=>`<tr><td><input style="width:140px;max-width:100%" data-typename="${t.id}" value="${esc(t.name)}"></td><td><select data-typecat="${t.id}">${[['work','근무자'],['off','휴무자'],['special','특이근태']].map(([id,n])=>`<option value="${id}" ${t.category===id?'selected':''}>${n}</option>`).join('')}</select></td><td><input type="checkbox" data-typeactive="${t.id}" ${t.active?'checked':''}></td></tr>`).join('')}</table><button id="saveTypes">근태 설정 저장</button>`;$('saveTypes').onclick=()=>{state.types.forEach(t=>{t.name=document.querySelector(`[data-typename="${t.id}"]`).value.trim()||t.name;t.category=document.querySelector(`[data-typecat="${t.id}"]`).value;t.active=document.querySelector(`[data-typeactive="${t.id}"]`).checked});save();toast('근태 유형 저장 완료')};$('shiftTimes').innerHTML=`<table><tr><th>근무조</th><th>시작</th><th>종료</th></tr>${Object.entries(state.times).map(([id,t])=>`<tr><td>${esc(id)}</td><td><input type="time" data-start="${id}" value="${t.start}"></td><td><input type="time" data-end="${id}" value="${t.end}"></td></tr>`).join('')}</table><button id="saveTimes">시간 설정 저장</button>`;$('saveTimes').onclick=()=>{Object.keys(state.times).forEach(id=>{state.times[id]={start:document.querySelector(`[data-start="${id}"]`).value,end:document.querySelector(`[data-end="${id}"]`).value}});save();toast('근무시간 저장 완료')};$('managerEditor').innerHTML=[...staff].sort((a,b)=>a.id==='m'?-1:b.id==='m'?1:0).map(s=>`<label style="display:inline-flex;align-items:center;margin:7px"><input type="checkbox" data-manager="${s.id}" ${state.managers.includes(s.id)?'checked':''} ${current!=='m'?'disabled':''}>${esc(s.name)}</label>`).join('')+`<p><button id="saveManagers" ${current!=='m'?'disabled':''}>관리자 지정 저장</button></p><small>시제품에서는 점장 계정만 관리자 지정 권한을 가집니다.</small>`;$('saveManagers').onclick=()=>{let ids=[...document.querySelectorAll('[data-manager]:checked')].map(e=>e.dataset.manager);if(ids.length>4||!ids.includes('m'))return toast('관리자 최대 4명, 점장 포함 필수');state.managers=ids;save();toast('관리자 설정 저장 완료')}}function render(){fillSelectors();$('account').innerHTML='<option value="all">전체</option>'+selectOptions(staff);$('account').value=current;document.querySelectorAll('.tabs button').forEach(e=>e.classList.toggle('active',e.dataset.tab===tab));document.querySelectorAll('.bottomnav button').forEach(e=>e.classList.toggle('active',e.dataset.goto===tab));['calendar','apply','requests','admin'].forEach(t=>$(t+'Tab').classList.toggle('hidden',tab!==t));if(tab==='calendar'){$('finalizeCalendarMonth').textContent=monthFinalized(dateStr(viewYear,viewMonth,1))?'✓ 이달 확정 완료 · 관리자 수정 가능':'✓ 이달 근무표 최종 확정';$('finalizeCalendarMonth').disabled=monthFinalized(dateStr(viewYear,viewMonth,1));$('calendarConfirmPanel').classList.toggle('hidden',!calendarConfirmOpen);$('adminConfirm').classList.toggle('hidden',!isAdmin());calendar();if(calendarConfirmOpen){pendingAdminList();if(isAdmin()){if(!$('specialMonth').value)$('specialMonth').value=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;drawSpecialCalendar();$('specialEmployee').onchange?.();specialDeleteList();directCalendar();updateDirectDraft();confirmedManage()}}}if(tab==='apply')applyCalendar();if(tab==='requests'||tab==='admin')requests();$('confirmRequests').classList.add('hidden');if(tab==='admin')adminMenu();}$('account').innerHTML='<option value="all">전체</option>'+selectOptions([...staff].sort((a,b)=>a.id==='m'?-1:b.id==='m'?1:0));$('account').value=current;$('account').onchange=e=>{const next=e.target.value,previous=current;if(next===previous)return;unlockedAccount=null;current=next;if(state.managers.includes(next)&&!unlockAdmin()){current=previous;unlockedAccount=null;render();return;}chosenDates.clear();tab='calendar';render()};$('toggleCalendarConfirm').onclick=()=>{calendarConfirmOpen=!calendarConfirmOpen;render();if(calendarConfirmOpen)$('calendarConfirmPanel').scrollIntoView({behavior:'smooth',block:'start'})};function authenticateMonthFinalize(){
+  state.adminPasswords??={};
+  const managers=state.managers.filter(id=>staff.some(p=>p.id===id));
+  if(!managers.length){toast('등록된 관리자가 없습니다');return false}
+  const configured=managers.filter(id=>state.adminPasswords[id]);
+  if(!configured.length){
+    toast('관리자 계정에서 먼저 비밀번호를 설정해 주세요');
+    return false;
+  }
+  const entered=prompt('근무표 최종 확정 · 관리자 비밀번호를 입력하세요');
+  if(entered===null)return false;
+  if(!configured.some(id=>demoHash(entered)===state.adminPasswords[id])){
+    toast('관리자 비밀번호가 올바르지 않습니다');return false;
+  }
+  return true;
+}
+$('finalizeCalendarMonth').onclick=()=>{if(!authenticateMonthFinalize())return;const prefix=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;if(monthFinalized(prefix+'-01'))return toast('이미 확정된 월입니다. 관리자는 일자별 현황의 근태 직접 등록·삭제로 수정할 수 있습니다');const last=new Date(viewYear,viewMonth+1,0).getDate();const dates=Array.from({length:last},(_,i)=>dateStr(viewYear,viewMonth,i+1));const pending=state.requests.filter(r=>r.status==='신청'&&r.date.startsWith(prefix));const risks=dates.filter(d=>forecast(d).problems.length);if(risks.length&&!confirm(`인원주의 날짜가 ${risks.length}일 있습니다.\n${risks.slice(0,8).join(', ')}\n조정 후 확정하는 것이 좋습니다. 그래도 확정할까요?`))return;if(!confirm(`${viewYear}년 ${viewMonth+1}월 근무표를 최종 확정할까요?\n신청된 휴무 ${pending.length}건이 확정되며 직원은 이달 휴무를 직접 변경할 수 없습니다.`))return;const now=new Date().toISOString();for(const r of pending){state.confirmed[r.date]??={};state.confirmed[r.date][r.employee]={type:r.type,by:current,at:now};r.status='확정';r.confirmedAt=now;r.confirmedBy=current}state.finalizedMonths??={};state.finalizedMonths[prefix]={at:now,by:current};save();toast(`${viewYear}년 ${viewMonth+1}월 근무표 최종 확정 완료`)};document.querySelectorAll('.tabs button').forEach(e=>e.onclick=()=>{if(e.dataset.tab==='admin'&&!isAdmin()&&!unlockAdmin())return;tab=e.dataset.tab;render()});document.querySelectorAll('.bottomnav button').forEach(e=>e.onclick=()=>{if(e.dataset.goto==='admin'&&!isAdmin()&&!unlockAdmin())return;tab=e.dataset.goto;render();window.scrollTo({top:0,behavior:'smooth'})});$('confirmRequests').onclick=()=>{if(!isAdmin())return toast('관리자 인증이 필요합니다');const start=new Date(requestYear,requestMonth,1).getDay();const count=new Date(requestYear,requestMonth+1,0).getDate();const weeks=Math.ceil((start+count)/7);const dates=Array.from({length:weeks*7},(_,i)=>{const dt=new Date(requestYear,requestMonth,1-start+i);return dateStr(dt.getFullYear(),dt.getMonth(),dt.getDate())});const pending=state.requests.filter(r=>dates.includes(r.date)&&r.status==='신청');if(!pending.length)return toast('확정할 신청 내역이 없습니다');const conflicts=[];for(const d of dates){const entries=pending.filter(r=>r.date===d);if(entries.length&&forecast(d).problems.length)conflicts.push(d)}if(conflicts.length&&!confirm(`최소 인원 경고 날짜가 ${conflicts.length}일 있습니다. 오프라인 조정 후 확정하시겠습니까?\n${conflicts.join(', ')}`))return;if(!confirm(`${requestYear}년 ${requestMonth+1}월 달력에 표시된 신청 ${pending.length}건을 확정할까요?\n휴무 미신청 직원은 기존 교육·박람회 등 특이근태가 없다면 출근으로 확정됩니다.\n인접 월 날짜도 포함됩니다.`))return;const now=new Date().toISOString();for(const d of dates){state.confirmed[d]??={};const reqs=pending.filter(r=>r.date===d);for(const r of reqs){state.confirmed[d][r.employee]={type:r.type,by:current,at:now};r.status='확정';r.confirmedAt=now;r.confirmedBy=current}for(const person of staff){if(reqs.some(r=>r.employee===person.id))continue;const existing=state.confirmed[d][person.id];if(!existing||['off','annual','work'].includes(existing.type)){state.confirmed[d][person.id]={type:'work',by:current,at:now}}}}save();toast(`${pending.length}건 확정 · 공용 출근부 반영`)};$('reqPrev').onclick=()=>{requestMonth--;if(requestMonth<0){requestMonth=11;requestYear--}requestCalendar()};$('reqNext').onclick=()=>{requestMonth++;if(requestMonth>11){requestMonth=0;requestYear++}requestCalendar()};$('reqToday').onclick=()=>{let d=new Date();requestYear=d.getFullYear();requestMonth=d.getMonth();requestCalendar()};$('jumpMonth').innerHTML=Array.from({length:12},(_,i)=>`<option value="${i}">${i+1}월</option>`).join('');$('jumpGo').onclick=()=>{let y=Number($('jumpYear').value),m=Number($('jumpMonth').value);if(y<2020||y>2100)return toast('연도를 확인하세요');viewYear=y;viewMonth=m;render()};$('prev').onclick=()=>{viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--}render()};$('next').onclick=()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++}render()};$('today').onclick=()=>{let d=new Date();viewYear=d.getFullYear();viewMonth=d.getMonth();selected=dateStrNow();render()};$('applyBtn').onclick=()=>{if(current==='all')return toast('우측 상단에서 직원 계정을 선택하세요');let kind=$('applyType').value,dates=[...chosenDates].sort();if(['am','pm'].includes(kind)&&['short','manager','instructor'].includes(state.shifts[current]))return toast('단축근무자는 전반휴·후반휴를 신청할 수 없습니다');if(!dates.length)return toast('날짜를 선택하세요');if(dates.some(d=>monthFinalized(d)))return toast('확정된 월의 직원 신청은 잠겨 있습니다. 관리자는 출근부 → 일자별 현황 → 근태 직접 등록에서 변경하세요');let duplicated=dates.filter(date=>state.requests.some(r=>r.employee===current&&r.date===date&&['신청','확정'].includes(r.status)));if(duplicated.length)return toast('이미 신청한 날짜가 있습니다: '+duplicated.join(', '));let batch=Date.now().toString();dates.forEach((date,i)=>state.requests.push({id:batch+'-'+i,employee:current,date,type:kind,status:'신청',batch}));chosenDates.clear();save();toast(dates.length+'일 신청 완료 · 신청현황에 즉시 반영')};$('applyPrev').onclick=()=>{applyMonth--;if(applyMonth<0){applyMonth=11;applyYear--}applyCalendar()};$('applyNext').onclick=()=>{applyMonth++;if(applyMonth>11){applyMonth=0;applyYear++}applyCalendar()};$('clearSelection').onclick=()=>{chosenDates.clear();applyCalendar()};$('applyType').onchange=()=>applyCalendar();document.querySelectorAll('[data-admin-page]').forEach(e=>e.onclick=()=>{adminPage=e.dataset.adminPage;adminMenu()});$('fixedMonth').onchange=fixedPreview;$('fixedEmployee').onchange=fixedPreview;$('fixedType').onchange=fixedPreview;document.querySelectorAll('#fixedWeekdays input').forEach(e=>e.onchange=fixedPreview);$('fixedPreviewBtn').onclick=fixedPreview;$('fixedSave').onclick=()=>{
+ if(!isAdmin())return toast('관리자만 등록할 수 있습니다');
+ const e=$('fixedEmployee').value,all=fixedSelectedDates(),t=$('fixedType').value;
+ if(!all.length)return toast('휴무 요일을 선택하세요');
+ const conflicts=fixedConflicts(e,all),dates=all.filter(d=>!conflicts.includes(d));
+ if(!dates.length)return toast('이미 모든 날짜에 근태가 등록되어 있습니다');
+ const risks=dates.filter(d=>forecast(d,[{employee:e,type:t}]).problems.length);
+ if(!confirm(`${name(e)} · ${$('fixedMonth').value} · ${dates.length}일을 ${type(t).name}로 등록할까요?\n기존 근태 ${conflicts.length}일은 제외합니다.${risks.length?'\n최소 인원 부족 예상 '+risks.length+'일이 있습니다.':''}`))return;
+ const id='fixed-'+Date.now()+'-'+Math.floor(Math.random()*10000),now=new Date().toISOString();
+ for(const d of dates){state.confirmed[d]??={};state.confirmed[d][e]={type:t,by:current,at:now,fixedBatch:id}}
+ state.fixedLeaveBatches??=[];state.fixedLeaveBatches.push({id,employee:e,month:$('fixedMonth').value,days:[...document.querySelectorAll('#fixedWeekdays input:checked')].map(x=>Number(x.value)),dates,type:t,at:now});
+ save();fixedEditor();specialDeleteList();toast(`${dates.length}일 고정 휴무 등록 완료`)
+ };let specialSelectedDates=new Set();
+function drawSpecialCalendar(){
+ const month=$('specialMonth').value||`${viewYear}-${String(viewMonth+1).padStart(2,'0')}`;
+ const [y,m]=month.split('-').map(Number);
+ const first=new Date(y,m-1,1).getDay();
+ const total=new Date(y,m,0).getDate();
+ const rows=Math.ceil((first+total)/7);
+ $('specialMonthTitle').textContent=`${y}년 ${m}월`;
+ let html='<div class="special-weekdays">'+['일','월','화','수','목','금','토'].map(x=>`<span>${x}</span>`).join('')+'</div><div class="special-date-grid">';
+ for(let i=0;i<rows*7;i++){
+  const dt=new Date(y,m-1,1-first+i);
+  const date=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  const outside=dt.getMonth()!==m-1;
+  const day=dt.getDay();
+  html+=`<button type="button" class="special-day ${outside?'outside':''} ${day===0?'sun':day===6?'sat':''} ${specialSelectedDates.has(date)?'picked':''}" data-special-day="${date}" aria-label="${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일${outside?' 인접 월':''}" aria-pressed="${specialSelectedDates.has(date)}">${dt.getDate()}</button>`;
+ }
+ html+='</div>';
+ $('specialMultiCalendar').innerHTML=html;
+ $('specialSelectedCount').textContent=specialSelectedDates.size?`${specialSelectedDates.size}일 선택: ${[...specialSelectedDates].sort().map(d=>`${Number(d.slice(5,7))}/${Number(d.slice(8,10))}`).join(', ')}`:'달력에서 앞뒤 달 날짜까지 여러 개 선택하세요.';
+ document.querySelectorAll('[data-special-day]').forEach(b=>b.onclick=()=>{const d=b.dataset.specialDay;if(specialSelectedDates.has(d))specialSelectedDates.delete(d);else specialSelectedDates.add(d);drawSpecialCalendar()});
+}
+$('specialMonth').onchange=()=>{drawSpecialCalendar();specialDeleteList()};for(const [button,step] of [['specialPrevMonth',-1],['specialNextMonth',1]])$(button).onclick=()=>{const [y,m]=($('specialMonth').value||'2026-11').split('-').map(Number);const next=new Date(y,m-1+step,1);$('specialMonth').value=`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;drawSpecialCalendar();specialDeleteList()};
+$('specialEmployee').onchange=()=>{const sh=state.shifts[$('specialEmployee').value];for(const o of $('specialType').options){if(['am','pm'].includes(o.value))o.disabled=sh==='short'}if($('specialType').selectedOptions[0]?.disabled)$('specialType').value='off';specialDeleteList()};
+$('specialSave').onclick=()=>{if(!isAdmin())return toast('관리자 권한이 필요합니다');const employee=$('specialEmployee').value,kind=$('specialType').value,selectedType=state.types.find(t=>t.id===kind&&t.active);if(!employee||!selectedType||!specialSelectedDates.size)return toast('직원·근태·날짜를 선택하세요');if(['am','pm'].includes(kind)&&state.shifts[employee]==='short')return toast('단축조는 반휴를 등록할 수 없습니다');const dates=[...specialSelectedDates].sort(),blocked=dates.filter(date=>(state.confirmed[date]?.[employee]&&state.confirmed[date][employee].type!=='work')||state.requests.some(r=>r.date===date&&r.employee===employee&&r.status==='신청'));const available=dates.filter(date=>!blocked.includes(date));if(!available.length)return toast('선택한 날짜에 이미 근태 또는 신청 내역이 있습니다');if(!confirm(`${name(employee)} · ${selectedType.name} · ${available.length}일 등록${blocked.length?` (기존 기록 ${blocked.length}일 제외)`:''}할까요?`))return;for(const date of available){state.confirmed[date]??={};state.confirmed[date][employee]={type:kind,by:current,at:new Date().toISOString()}}specialSelectedDates.clear();save();drawSpecialCalendar();specialDeleteList();toast(`${name(employee)} · ${selectedType.name} ${available.length}일 등록 완료${blocked.length?` · ${blocked.length}일 제외`:''}`)};$('directPrev').onclick=()=>{directMonth--;if(directMonth<0){directMonth=11;directYear--}directCalendar();confirmedManage()};$('directNext').onclick=()=>{directMonth++;if(directMonth>11){directMonth=0;directYear++}directCalendar();confirmedManage()};$('directClear').onclick=()=>{directDates.clear();directCalendar()};$('directEmployee').onchange=()=>directCalendar();$('directType').onchange=()=>directCalendar();$('directSave').onclick=()=>{let dates=[...directDates].sort(),e=$('directEmployee').value,t=$('directType').value;if(!dates.length)return toast('날짜를 선택하세요');if(shiftDraft&&state.shifts[e]==='short'&&['am','pm'].includes(t))return toast('단축근무자는 반휴를 사용할 수 없습니다');if(!confirm(`${name(e)} · ${type(t).name} · ${dates.length}일을 등록할까요?\n기존에 등록된 근태가 있다면 관리자 확정 시 새 근태로 변경됩니다.`))return;const now=new Date().toISOString();dates.forEach(d=>{directDraft[d]??={};directDraft[d][e]={type:t,by:current,at:now};});directDates.clear();directCalendar();updateDirectDraft();toast(dates.length+'일 임시 등록 · 우측 상단 확정 필요')};$('publishDirect').onclick=()=>{if(!isAdmin())return toast('관리자 인증이 필요합니다');const dates=Object.keys(directDraft),count=dates.reduce((n,d)=>n+Object.keys(directDraft[d]).length,0);if(!count)return toast('임시 등록된 근태가 없습니다');if(!confirm(`${count}건의 근태를 공용 출근부에 확정 반영할까요?`))return;for(const d of dates){state.confirmed[d]??={};Object.assign(state.confirmed[d],directDraft[d]);}directDraft={};save();toast(`${count}건 관리자 등록·수정 완료 · 확정된 월에도 반영됨`)};
+$('minPrev').onclick=()=>{minMonth--;if(minMonth<0){minMonth=11;minYear--}minimumEditor()};
+$('minNext').onclick=()=>{minMonth++;if(minMonth>11){minMonth=0;minYear++}minimumEditor()};
+$('saveShifts').onclick=()=>{if(!shiftDraft)return;state.shifts={...shiftDraft};save();toast('근무조 설정이 저장되었습니다')};$('resetShifts').onclick=()=>{shiftDraft={...state.shifts};shiftEditor();toast('저장 전 변경을 취소했습니다')};$('addType').onclick=()=>{let n=$('newType').value.trim();if(!n)return;state.types.push({id:'custom'+Date.now(),name:n,category:$('newCategory').value,active:true});$('newType').value='';save();toast('근태 유형 추가 완료')};render();
+
+(function(){
+const toggle=document.getElementById('accountToggle'),menu=document.getElementById('accountMenu'),sel=document.getElementById('account');
+function close(){menu.classList.add('hidden');toggle.setAttribute('aria-expanded','false')}
+function refresh(){const opt=sel.options[sel.selectedIndex];toggle.textContent=(opt?opt.text:'계정 선택')+' ▾';menu.innerHTML='';[...sel.options].forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o.text;b.setAttribute('role','option');b.setAttribute('aria-selected',String(o.value===sel.value));b.onclick=()=>{sel.value=o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));close();refresh()};menu.appendChild(b)})}
+toggle.addEventListener('click',e=>{e.stopPropagation();refresh();menu.classList.toggle('hidden');toggle.setAttribute('aria-expanded',String(!menu.classList.contains('hidden')))});
+document.addEventListener('click',e=>{if(!e.target.closest('.account-control'))close()});document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+const originalRender=render;render=function(){originalRender();refresh()};refresh();
+})();
+</script><script>if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js", {scope:"/"}).catch(console.warn));}</script></body></html>
